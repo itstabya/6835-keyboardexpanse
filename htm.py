@@ -24,7 +24,7 @@ class handDetector():
 
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(imgRGB)
-
+        print(self.results.multi_handedness)
         if self.results.multi_hand_landmarks:
             for handLms in self.results.multi_hand_landmarks:
                 if draw:
@@ -55,6 +55,7 @@ class handDetector():
             ymin, ymax = min(yList), max(yList)
             bbox = xmin, ymin, xmax, ymax
  
+ # need to modify code here for hands
             if draw:
                 cv2.rectangle(img, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20),
                               (0, 255, 0), 2)
@@ -112,7 +113,6 @@ def main():
           if len(lmList) != 0:
               # thumb finger landmark
               # print(lmList[4])
-
               pass
   
           cTime = time.time()

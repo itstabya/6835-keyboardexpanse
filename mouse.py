@@ -26,6 +26,7 @@ while True:
     success, img = cap.read()
     img = detector.findHands(img)
     lmList, bbox = detector.findPosition(img)
+
     # 2. Get the tip of the index and middle fingers
     if len(lmList) != 0:
         x1, y1 = lmList[8][1:]
@@ -51,16 +52,16 @@ while True:
         cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
         plocX, plocY = clocX, clocY
         
-    # # 8. Both Index and middle fingers are up : Clicking Mode
-    # if fingers[1] == 1 and fingers[2] == 1:
-    #     # 9. Find distance between fingers
-    #     length, img, lineInfo = detector.findDistance(8, 12, img)
-    #     print(length)
-    #     # 10. Click mouse if distance short
-    #     if length < 40:
-    #         cv2.circle(img, (lineInfo[4], lineInfo[5]),
-    #         15, (0, 255, 0), cv2.FILLED)
-    #         autopy.mouse.click()
+    # 8. Both Index and middle fingers are up : Clicking Mode
+    if fingers[1] == 1 and fingers[2] == 1:
+        # 9. Find distance between fingers
+        length, img, lineInfo = detector.findDistance(8, 12, img)
+        print(length)
+        # 10. Click mouse if distance short
+        if length < 30:
+            cv2.circle(img, (lineInfo[4], lineInfo[5]),
+            15, (0, 255, 0), cv2.FILLED)
+            autopy.mouse.click()
     
     # 11. Frame Rate
     cTime = time.time()
@@ -69,7 +70,8 @@ while True:
     cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3,
     (255, 0, 0), 3)
     # 12. Display
-    cv2.imshow("Image", img)
+    flip_img = cv2.flip(img, 2) # mirror image for convenience 
+    cv2.imshow("Image", flip_img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
   
