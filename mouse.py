@@ -2,10 +2,8 @@ import cv2
 import numpy as np
 import htm
 import time
-import autopy
-import pynput 
-from pynput.mouse import Button, Controller
 
+# import autopy
 
 ##########################
 wCam, hCam = 640, 480
@@ -31,22 +29,9 @@ mouse = Controller()
 
 def simulate_on_move(x, y):
     ...
-    autopy.mouse.move(wScr - x, y)
-    # print(wScr-x, y)
-    # mouse.position(wScr-x, y)
-
-# # Read pointer position
-# print('The current pointer position is {0}'.format(
-#     mouse.position))
-
-# # Set pointer position
-# mouse.position = (10, 20)
-# print('Now we have moved it to {0}'.format(
-#     mouse.position))
-
-# # Move pointer relative to current position
-# mouse.move(5, -5)
-
+    # autopy.mouse.move(wScr - x, y)
+    # pynput.mouse.move('')
+    ...
 
 
 def simulate_on_click(x, y, button, pressed):
