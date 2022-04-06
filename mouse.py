@@ -2,7 +2,10 @@ import cv2
 import numpy as np
 import htm
 import time
-# import autopy
+import autopy
+import pynput 
+from pynput.mouse import Button, Controller
+
 
 ##########################
 wCam, hCam = 640, 480
@@ -21,13 +24,29 @@ detector = htm.HandDetector(maxHands=2)
 
 # print(wScr, hScr)
 
-# wScr, hScr = autopy.screen.size()
+wScr, hScr = autopy.screen.size()
 
+mouse = Controller()
+# mouse.position set mouse position to the middle of the screenn
 
 def simulate_on_move(x, y):
     ...
-    # autopy.mouse.move(wScr - x, y)
-    # pynput.mouse.move('')
+    autopy.mouse.move(wScr - x, y)
+    # print(wScr-x, y)
+    # mouse.position(wScr-x, y)
+
+# # Read pointer position
+# print('The current pointer position is {0}'.format(
+#     mouse.position))
+
+# # Set pointer position
+# mouse.position = (10, 20)
+# print('Now we have moved it to {0}'.format(
+#     mouse.position))
+
+# # Move pointer relative to current position
+# mouse.move(5, -5)
+
 
 
 def simulate_on_click(x, y, button, pressed):
@@ -38,8 +57,7 @@ while True:
     # 1. Find hand Landmarks
     success, img = cap.read()
     img = detector.findHands(img)
-    lmList, bbox = detector.findPosition(img)
-
+    lmList = detector.findPosition(img)
     # 2. Get the tip of the index and middle fingers
     if len(lmList) != 0:
         x1, y1 = lmList[8][1:]
@@ -48,7 +66,7 @@ while True:
 
     # # 3. Check which fingers are up
     fingers = detector.fingersUp()
-    print(fingers)
+    #print(fingers)
     cv2.rectangle(
         img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2
     )
@@ -62,9 +80,10 @@ while True:
         clocY = plocY + (y3 - plocY) / smoothening
 
         # 7. Move Mouse
-        simulate_on_click(clocX, clocY)
         cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
         plocX, plocY = clocX, clocY
+        simulate_on_move(clocX, clocY)
+        
 
     # # 8. Both Index and middle fingers are up : Clicking Mode
     # if fingers[1] == 1 and fingers[2] == 1:
