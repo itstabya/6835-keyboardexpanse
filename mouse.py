@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import htm
 import time
+
 # import autopy
 
 ##########################
@@ -28,6 +29,7 @@ def simulate_on_move(x, y):
     ...
     # autopy.mouse.move(wScr - x, y)
     # pynput.mouse.move('')
+    ...
 
 
 def simulate_on_click(x, y, button, pressed):

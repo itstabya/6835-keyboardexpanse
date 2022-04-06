@@ -4,3 +4,4 @@ numpy==1.22.3
 opencv-python==4.5.5.64
 pynput==1.7.6
 black
+appdirs
