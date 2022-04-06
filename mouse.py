@@ -57,7 +57,9 @@ while True:
     # 1. Find hand Landmarks
     success, img = cap.read()
     img = detector.findHands(img)
-    lmList = detector.findPosition(img)
+    lmList, which_hands = detector.findPosition(img)
+    print(which_hands)
+
     # 2. Get the tip of the index and middle fingers
     if len(lmList) != 0:
         x1, y1 = lmList[8][1:]
@@ -66,7 +68,6 @@ while True:
 
     # # 3. Check which fingers are up
     fingers = detector.fingersUp()
-    #print(fingers)
     cv2.rectangle(
         img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2
     )

@@ -38,8 +38,7 @@ class HandDetector:
     def findHands(self, img, draw=True):
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(imgRGB)
-        if self.results.multi_hand_landmarks:
-          print(len(self.results.multi_hand_landmarks))
+
         if self.results.multi_hand_landmarks:
             for handLms in self.results.multi_hand_landmarks:
                 if draw:
@@ -51,12 +50,10 @@ class HandDetector:
     def findLandmarks(self, img, landmarks, draw=True):
       xList, yList, lmList, bbox = [], [], [], []
       for id, lm in enumerate(landmarks.landmark):
-        # print(id, lm)
         h, w, c = img.shape
         cx, cy = int(lm.x * w), int(lm.y * h)
         xList.append(cx)
         yList.append(cy)
-        # print(id, cx, cy)
         lmList.append([id, cx, cy])
         if draw:
           cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
@@ -69,17 +66,26 @@ class HandDetector:
       return lmList, bbox 
 
     def findPosition(self, img, handNo=0, draw=True):
-        xList, yList, bbox, self.lmList = [], [], [], []
+        self.lmList = []
+        # print(self.results.multi_handedness)
         if self.results.multi_hand_landmarks:
           hand = self.results.multi_hand_landmarks[0]
           handLms, handbbox = self.findLandmarks(img, hand)
           self.lmList = handLms
+          first_label = self.results.multi_handedness[0].classification[0].label
           if len(self.results.multi_hand_landmarks) == 2:
             hand2 = self.results.multi_hand_landmarks[1]
             hand2Lms, hand1bbox = self.findLandmarks(img, hand2)
-            self.lmList += hand2Lms
-        print(len(self.lmList))
-        return self.lmList
+            label = self.results.multi_handedness[1].classification[0].label
+            if label == "Left":
+              self.lmList = hand2Lms + self.lmList
+            else: 
+              self.lmList += hand2Lms
+          which_hands = first_label
+          if len(self.lmList) == 42:
+            which_hands = "Both"
+          return self.lmList, which_hands # ALWAYS L TO R if BOTH HANDS
+        return [], "None"
 
     def fingersUp(self, upAxis=1):
         # upAxis:
@@ -138,7 +144,6 @@ def main():
         if success:
             img = detector.findHands(img)
             lmList, bbox = detector.findPosition(img)
-            #print("lm List", lmList)
             if len(lmList) != 0:
                 # thumb finger landmark
                 # print(lmList[4])
