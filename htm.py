@@ -17,7 +17,7 @@ class Handness(enum.Enum):
         if self.value == "Right":
             return 1
         return 0
- 
+
     @property
     def color(self):
         if self.value == "Right":
@@ -30,12 +30,13 @@ class Axis(enum.IntEnum):
     Y = 1
     Z = 2
 
+
 TIPS = [
     HandLandmark.THUMB_TIP,
     HandLandmark.INDEX_FINGER_TIP,
     HandLandmark.MIDDLE_FINGER_TIP,
     HandLandmark.RING_FINGER_TIP,
-    HandLandmark.PINKY_TIP
+    HandLandmark.PINKY_TIP,
 ]
 
 BASES = [
@@ -45,6 +46,7 @@ BASES = [
     HandLandmark.RING_FINGER_PIP,
     HandLandmark.PINKY_PIP,
 ]
+
 
 class HandDetector:
     def __init__(
@@ -79,9 +81,11 @@ class HandDetector:
                 handNo = self.handNumber(handness)
                 if handNo is not None and self.results.multi_hand_landmarks[handNo]:
                     self.mpDraw.draw_landmarks(
-                        img, self.results.multi_hand_landmarks[handNo], self.mpHands.HAND_CONNECTIONS,
-                        self.mpDraw.DrawingSpec(color=handness.color)
-                    )           
+                        img,
+                        self.results.multi_hand_landmarks[handNo],
+                        self.mpHands.HAND_CONNECTIONS,
+                        self.mpDraw.DrawingSpec(color=handness.color),
+                    )
 
         return img
 
@@ -97,7 +101,6 @@ class HandDetector:
                 if handNo is None:
                     continue
 
-               
                 myHand = self.results.multi_hand_landmarks[handNo]
                 for lm in myHand.landmark:
                     hands[handIdx].append([lm.x, lm.y, lm.z])
@@ -148,10 +151,17 @@ class HandDetector:
 
         if not handLandmarks:
             return None
-        
-        thumbToTheLeftOfWrist = handLandmarks[HandLandmark.THUMB_TIP][Axis.X] < handLandmarks[HandLandmark.WRIST][Axis.X]
 
-        return thumbToTheLeftOfWrist if hand == Handness.RightHand else not thumbToTheLeftOfWrist
+        thumbToTheLeftOfWrist = (
+            handLandmarks[HandLandmark.THUMB_TIP][Axis.X]
+            < handLandmarks[HandLandmark.WRIST][Axis.X]
+        )
+
+        return (
+            thumbToTheLeftOfWrist
+            if hand == Handness.RightHand
+            else not thumbToTheLeftOfWrist
+        )
 
     def fingersUp(self, hand=Handness.RightHand, upAxis=Axis.Y):
         # upAxis:
@@ -165,7 +175,7 @@ class HandDetector:
         #   [][][][]
         # C [      ]
         #    [    ]
-        
+
         # Thumb: Extension by X displacement
         # Fingers: Extension by Y displacement
 
@@ -174,7 +184,6 @@ class HandDetector:
 
         # Thumb: Extension by Y displacement
         # Fingers: Extension by Z displacement (beyond norm) or Y displacemen
-
 
         fingers = []
         handLandmarks = self.landmarks[hand.index]
@@ -188,10 +197,18 @@ class HandDetector:
             )
 
             # Left hand is inverted for the thumb
-            isTipHigherThanBase = isTipHigherThanBase if hand == Handness.RightHand else not isTipHigherThanBase
+            isTipHigherThanBase = (
+                isTipHigherThanBase
+                if hand == Handness.RightHand
+                else not isTipHigherThanBase
+            )
 
             # # It is also inverted if the palm is not facing the camera
-            isTipHigherThanBase = isTipHigherThanBase if self.isPalmFacingCamera(hand) else not isTipHigherThanBase
+            isTipHigherThanBase = (
+                isTipHigherThanBase
+                if self.isPalmFacingCamera(hand)
+                else not isTipHigherThanBase
+            )
 
             fingers.append(isTipHigherThanBase)
 
@@ -206,18 +223,21 @@ class HandDetector:
             return [0, 0, 0, 0, 0]
         return fingers
 
-    def findDistance(self, p1, p2, img, hand=Handness.LeftHand, draw=True, r=15, t=3):
+    def findDistance(self, p1, p2, img, hand=Handness.RightHand, draw=True, r=15, t=3):
         handLandmarks = self.landmarks[hand.index]
 
-        x1, y1 = handLandmarks[p1][1:]
-        x2, y2 = handLandmarks[p2][1:]
-        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+        h, w, _ = img.shape
+        x1, y1, _ = handLandmarks[p1]
+        x2, y2, _ = handLandmarks[p2]
 
         if draw:
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 255), t)
-            cv2.circle(img, (x1, y1), r, (255, 0, 255), cv2.FILLED)
-            cv2.circle(img, (x2, y2), r, (255, 0, 255), cv2.FILLED)
+            cx1, cy1 = int(w * x1), int(h * y1)
+            cx2, cy2 = int(w * x2), int(h * y2)
+            cx, cy = (cx1 + cx2) // 2, (cy1 + cy2) // 2
+            cv2.line(img, (cx1, cy1), (cx2, cy2), (255, 0, 255), t)
+            cv2.circle(img, (cx1, cy1), r, (255, 0, 255), cv2.FILLED)
+            cv2.circle(img, (cx2, cy2), r, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, (cx, cy), r, (0, 0, 255), cv2.FILLED)
         length = math.hypot(x2 - x1, y2 - y1)
 
-        return length, img, [x1, y1, x2, y2, cx, cy]
+        return length, img, [cx1, cy1, cx2, cy2, cx, cy]
