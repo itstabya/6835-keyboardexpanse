@@ -5,19 +5,22 @@ import time
 from keyboardexpanse.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
 
+QWERTY_LSWIPE = "e+r+t"
+QWERTY_RSWIPE = "o+i+u"
+
+QWERTY_LSWIPE_KEY = "control(alt(right))"
+QWERTY_RSWIPE_KEY = "control(alt(left))"
 
 @dataclass
 class Window:
     values = []
     recent_index = 0
-    length_milliseconds = 5e2
+    length_nanoseconds = 5e8 # 1s = 1e9ns
 
     def insert(self, time, item):
 
         # Expire older than 5
-        while self.values and self.values[0][0] < time - timedelta(
-            milliseconds=self.length_milliseconds
-        ):
+        while self.values and self.values[0][0] < time - self.length_nanoseconds:
             self.values.pop(0)
             self.recent_index -= 1
 
@@ -26,7 +29,7 @@ class Window:
         else:
             self.values.append((time, item))
 
-        return float(len(self.values) - self.recent_index) / len(self.values)
+        return
 
     def characters(self):
         return "+".join(c for ts, c in self.values)
@@ -72,35 +75,45 @@ class Relay:
         self._ke.send_key_combination(keycombo)
 
     def on_event(self, key, action):
-        # print(key, action)
+        print(key, action)
 
         if action == "pressed":
-            self.recent.insert(datetime.datetime.now(), key)
+            self.recent.insert(time.time_ns(), key)
 
         if "pressed" == action:
             self.pressed.add(key)
         elif key in self.pressed:
             self.pressed.remove(key)
 
-        # new_status = f'pressed: {self.recent.characters()}'
-        # if self._status != new_status:
-        #     # ke.send_backspaces(len(status))
-        #     # ke.send_string(new_status)
-        #     print(self._status)
-        #     self._status = new_status
+        new_status = f'pressed: {self.recent.characters()}'
+        if self._status != new_status:
+            print(self._status)
+            self._status = new_status
 
         # Log
         if self.record:
             csv_row = f"{time.time_ns()}, {self.command}, {'+'.join(self.pressed) if self.pressed else 'Blank'}"
             print(csv_row, file=self._fp)
 
-        # Relay key combinations
-        if (
-            not self.supress
-            and "pressed" == action
-            and key in KeyboardCapture.SUPPORTED_KEYS
-        ):
-            try:
-                self._ke.send_key_combination(CHAR_TO_KEYNAME.get(key, key))
-            except Exception as err:
-                print(f"[ERROR] {err}")
+        # Swipe controls
+        characters = self.recent.characters()
+        if QWERTY_LSWIPE in characters:
+            self.send_key_combination(QWERTY_LSWIPE_KEY)
+            self.recent.clear()
+
+        if QWERTY_RSWIPE in characters:
+            self.send_key_combination(QWERTY_RSWIPE_KEY)
+            self.recent.clear()
+
+        # TODO(DJRHails): Relaying like this dramatically slows down
+
+        # # Relay key combinations
+        # if (
+        #     not self.supress
+        #     and "pressed" == action
+        #     and key in KeyboardCapture.SUPPORTED_KEYS
+        # ):
+        #     try:
+        #         self._ke.send_key_combination(CHAR_TO_KEYNAME.get(key, key))
+        #     except Exception as err:
+        #         print(f"[ERROR] {err}")

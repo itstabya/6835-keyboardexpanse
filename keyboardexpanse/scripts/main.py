@@ -2,27 +2,28 @@ import cv2
 import numpy as np
 import htm
 import time
-import autopy
+# import autopy
 from screeninfo import get_monitors
 
 # import pyautogui
 
+from htm import Handness
 from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.relay import Relay
 
 ##########################
-wCam, hCam = 640, 480
+wCam, hCam = 900, 500
 smoothening = 7
-wScr, hScr = autopy.screen.size()
+wScr, hScr = 100, 100 # autopy.screen.size()
 frameR = 100
-
+FRAME_RATE_DELAY = .02
 #########################
 
 
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
-    autopy.mouse.move(x, y)
-
+    # autopy.mouse.move(x, y)
+    ...
 
 def main():
     """Launch Keyboard Expanse."""
@@ -34,7 +35,7 @@ def main():
     plocX, plocY = 0, 0
     clocX, clocY = 0, 0
 
-    cap = cv2.VideoCapture(-1)
+    cap = cv2.VideoCapture(0)
     cap.set(3, wCam)
     cap.set(4, hCam)
     detector = htm.HandDetector(maxHands=2)
@@ -48,11 +49,13 @@ def main():
     try:
         while True:
             # 1. Find hand Landmarks
-            success, img = cap.read()
+            _, img = cap.read()
             # mirror image for convenience
             img = cv2.flip(img, 2)
-            h_img = detector.process(img)
-            # 3. Check which fingers are up
+            detector.process(img)
+
+            upness = [[0] * 5, [0] * 5]
+            # 3. For each hand
             for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
                 handLandmarks = detector.landmarks[handness.index]
 
@@ -60,6 +63,7 @@ def main():
                     continue
 
                 fingers = detector.fingersUp(hand=handness, upAxis=htm.Axis.Y)
+                upness[handness.index] = fingers
                 imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
                 cv2.rectangle(
                     img,
@@ -101,13 +105,13 @@ def main():
                         HandLandmark.MIDDLE_FINGER_TIP,
                         img,
                     )
-                    print(length)
+                    # print(length)
                     # 10. Click mouse if distance short
                     if length < 0.07:
                         cv2.circle(
                             img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
                         )
-                        autopy.mouse.click()
+                        # autopy.mouse.click()
 
                 # Three finger motion
                 if fingers[1:] == [1, 0, 0, 1]:
@@ -118,32 +122,28 @@ def main():
 
                 prevThumb = fingers[0]
 
-            # Character control
-            characters = r.recent.characters()
-            # print(f"{time.time()} {characters}")
-            new_status = f"pressed: {characters}"
-            if prev_status != new_status:
-                # ke.send_backspaces(len(status))
-                # ke.send_string(new_status)
-                print(prev_status)
-                prev_status = new_status
-
-            if "e+r+t" in characters:
-                print("lswipe")
-                r.send_key_combination("control(right)")
-                r.recent.clear()
-
-            if "o+i+u" in characters:
-                print("rswipe")
-                r.send_key_combination("control(left)")
-                r.recent.clear()
+            # 2 Hand Gestures
+            if True or (upness[0][1] and upness[1][1]):
+                length, img, lineInfo = detector.find2HandDistance(
+                    hand1=Handness.LeftHand,
+                    landmark1=HandLandmark.INDEX_FINGER_TIP,
+                    hand2=Handness.RightHand,
+                    landmark2=HandLandmark.INDEX_FINGER_TIP,
+                    img=img
+                )
+                # print(length)
+                # 10. Click mouse if distance short
+                if length < 0.1:
+                    cv2.circle(
+                        img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
+                    )
 
             # 11. Frame Rate
             cTime = time.time()
             fps = 1 / (cTime - pTime)
 
-            if (cTime - pTime) < 0.02:
-                time.sleep(0.02 - (cTime - pTime))
+            if (cTime - pTime) < FRAME_RATE_DELAY:
+                time.sleep(FRAME_RATE_DELAY - (cTime - pTime))
 
             pTime = cTime
             cv2.putText(
