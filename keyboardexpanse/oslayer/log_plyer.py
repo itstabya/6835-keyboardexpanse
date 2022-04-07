@@ -9,24 +9,26 @@ from keyboardexpanse.oslayer.config import ASSETS_DIR, PLATFORM
 
 APPNAME = __software_name__.capitalize()
 
-if PLATFORM == 'win':
-    APPICON = os.path.join(ASSETS_DIR, 'keyboardexpanse.ico')
+if PLATFORM == "win":
+    APPICON = os.path.join(ASSETS_DIR, "keyboardexpanse.ico")
 else:
-    APPICON = os.path.join(ASSETS_DIR, 'keyboardexpanse_32x32.png')
+    APPICON = os.path.join(ASSETS_DIR, "keyboardexpanse_32x32.png")
 
 
 class PlyerNotificationHandler(logging.Handler):
-    """ Handler using Plyer's notifications to show messages. """
+    """Handler using Plyer's notifications to show messages."""
 
     def __init__(self):
         super().__init__()
         self.setLevel(log.WARNING)
-        self.setFormatter(log.NoExceptionTracebackFormatter('%(levelname)s: %(message)s'))
+        self.setFormatter(
+            log.NoExceptionTracebackFormatter("%(levelname)s: %(message)s")
+        )
 
     def emit(self, record):
         level = record.levelno
         message = self.format(record)
-        if message.endswith('\n'):
+        if message.endswith("\n"):
             message = message[:-1]
         if level <= log.INFO:
             timeout = 10

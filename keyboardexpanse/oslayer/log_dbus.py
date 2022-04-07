@@ -1,4 +1,3 @@
-
 import os
 import logging
 
@@ -9,13 +8,13 @@ from keyboardexpanse.oslayer.config import ASSETS_DIR
 
 
 APPNAME = __software_name__.capitalize()
-APPICON = os.path.join(ASSETS_DIR, 'keyboardexpanse.png')
-SERVICE = 'org.freedesktop.Notifications'
-INTERFACE = '/org/freedesktop/Notifications'
+APPICON = os.path.join(ASSETS_DIR, "keyboardexpanse.png")
+SERVICE = "org.freedesktop.Notifications"
+INTERFACE = "/org/freedesktop/Notifications"
 
 
 class DbusNotificationHandler(logging.Handler):
-    """ Handler using DBus notifications to show messages. """
+    """Handler using DBus notifications to show messages."""
 
     def __init__(self):
         super().__init__()
@@ -23,12 +22,14 @@ class DbusNotificationHandler(logging.Handler):
         self._proxy = self._bus.get_object(SERVICE, INTERFACE)
         self._notify = dbus.Interface(self._proxy, SERVICE)
         self.setLevel(log.WARNING)
-        self.setFormatter(log.NoExceptionTracebackFormatter('<b>%(levelname)s:</b> %(message)s'))
+        self.setFormatter(
+            log.NoExceptionTracebackFormatter("<b>%(levelname)s:</b> %(message)s")
+        )
 
     def emit(self, record):
         level = record.levelno
         message = self.format(record)
-        if message.endswith('\n'):
+        if message.endswith("\n"):
             message = message[:-1]
         if level <= log.INFO:
             timeout = 10
@@ -39,8 +40,13 @@ class DbusNotificationHandler(logging.Handler):
         else:
             timeout = 0
             urgency = 2
-        self._notify.Notify(APPNAME, 0, APPICON,  # app_name, replaces_id, app_icon
-                            APPNAME, message, '', # actions
-                            { 'urgency': dbus.Byte(urgency) },
-                            timeout * 1000)
-
+        self._notify.Notify(
+            APPNAME,
+            0,
+            APPICON,  # app_name, replaces_id, app_icon
+            APPNAME,
+            message,
+            "",  # actions
+            {"urgency": dbus.Byte(urgency)},
+            timeout * 1000,
+        )

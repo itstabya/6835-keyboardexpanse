@@ -1,15 +1,50 @@
+import enum
 import cv2
 import mediapipe as mp
 import time
 import math
 import numpy as np
 
-THUMB_INDEX = 4
-INDEX_INDEX = 8
-MIDDLE_INDEX = 12
-RING_INDEX = 16
-PINKY_INDEX = 20
+from keyboardexpanse.hands.landmarks import HandLandmark
 
+
+class Handness(enum.Enum):
+    LeftHand = "Left"
+    RightHand = "Right"
+
+    @property
+    def index(self):
+        if self.value == "Right":
+            return 1
+        return 0
+ 
+    @property
+    def color(self):
+        if self.value == "Right":
+            return (0, 0, 255)
+        return (0, 128, 0)
+
+
+class Axis(enum.IntEnum):
+    X = 0
+    Y = 1
+    Z = 2
+
+TIPS = [
+    HandLandmark.THUMB_TIP,
+    HandLandmark.INDEX_FINGER_TIP,
+    HandLandmark.MIDDLE_FINGER_TIP,
+    HandLandmark.RING_FINGER_TIP,
+    HandLandmark.PINKY_TIP
+]
+
+BASES = [
+    HandLandmark.THUMB_IP,
+    HandLandmark.INDEX_FINGER_PIP,
+    HandLandmark.MIDDLE_FINGER_PIP,
+    HandLandmark.RING_FINGER_PIP,
+    HandLandmark.PINKY_PIP,
+]
 
 class HandDetector:
     def __init__(
@@ -32,41 +67,71 @@ class HandDetector:
         )
         self.mpDraw = mp.solutions.drawing_utils
 
-        self.tipIds = [THUMB_INDEX, INDEX_INDEX, MIDDLE_INDEX, RING_INDEX, PINKY_INDEX]
+        self.referenceIds = list(zip(TIPS, BASES))
 
-    def findHands(self, img, draw=True):
+    def process(self, img, draw=True):
 
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(imgRGB)
 
-        print(self.results.multi_handedness)
-
-        if self.results.multi_hand_landmarks:
-            for handLms in self.results.multi_hand_landmarks:
-                if draw:
+        if draw:
+            for handness in (Handness.LeftHand, Handness.RightHand):
+                handNo = self.handNumber(handness)
+                if handNo is not None and self.results.multi_hand_landmarks[handNo]:
                     self.mpDraw.draw_landmarks(
-                        img, handLms, self.mpHands.HAND_CONNECTIONS
-                    )
+                        img, self.results.multi_hand_landmarks[handNo], self.mpHands.HAND_CONNECTIONS,
+                        self.mpDraw.DrawingSpec(color=handness.color)
+                    )           
 
         return img
 
-    def findPosition(self, img, handNo=0, draw=True):
+    @property
+    def landmarks(self):
+        hands = [], []
+
+        if self.results.multi_hand_landmarks:
+            for handIdx, handness in enumerate((Handness.LeftHand, Handness.RightHand)):
+                handNo = self.handNumber(handness)
+
+                # Skip if we can't find it
+                if handNo is None:
+                    continue
+
+               
+                myHand = self.results.multi_hand_landmarks[handNo]
+                for lm in myHand.landmark:
+                    hands[handIdx].append([lm.x, lm.y, lm.z])
+
+        return hands
+
+    def handNumber(self, hand: Handness):
+        return next(
+            (
+                idx
+                for idx, x in enumerate(self.results.multi_handedness or [])
+                if x.classification[0].label == hand.value
+            ),
+            None,
+        )
+
+    def findImagePosition(self, img, hand=Handness.RightHand, draw=True):
         xList = []
         yList = []
-        bbox = []
-        self.lmList = []
-        if self.results.multi_hand_landmarks:
-            myHand = self.results.multi_hand_landmarks[handNo]
-            for id, lm in enumerate(myHand.landmark):
-                # print(id, lm)
-                h, w, c = img.shape
-                cx, cy = int(lm.x * w), int(lm.y * h)
+        bbox = ()
+        imageLandmarks = []
+
+        handLandmarks = self.landmarks[hand.index]
+
+        if handLandmarks:
+            for lm in handLandmarks:
+                h, w, _ = img.shape
+                cx, cy = int(lm[Axis.X] * w), int(lm[Axis.Y] * h)
                 xList.append(cx)
                 yList.append(cy)
-                # print(id, cx, cy)
-                self.lmList.append([id, cx, cy])
-                if draw:
-                    cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
+
+                imageLandmarks.append([cx, cy])
+                # if draw:
+                #     cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
 
             xmin, xmax = min(xList), max(xList)
             ymin, ymax = min(yList), max(yList)
@@ -76,32 +141,63 @@ class HandDetector:
                     img, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20), (0, 255, 0), 2
                 )
 
-        return self.lmList, bbox
+        return imageLandmarks, bbox
 
-    def fingersUp(self, upAxis=1):
+    def isPalmFacingCamera(self, hand=Handness.RightHand):
+        handLandmarks = self.landmarks[hand.index]
+
+        if not handLandmarks:
+            return None
+        
+        thumbToTheLeftOfWrist = handLandmarks[HandLandmark.THUMB_TIP][Axis.X] < handLandmarks[HandLandmark.WRIST][Axis.X]
+
+        return thumbToTheLeftOfWrist if hand == Handness.RightHand else not thumbToTheLeftOfWrist
+
+    def fingersUp(self, hand=Handness.RightHand, upAxis=Axis.Y):
         # upAxis:
         # 0 = X
         # 1 = Y
         # 2 = Z
 
-        fingers = []
+        # When Hand is raised
+        #     [][]
+        #   [][][][]
+        #   [][][][]
+        # C [      ]
+        #    [    ]
+        
+        # Thumb: Extension by X displacement
+        # Fingers: Extension by Y displacement
 
-        # Thumb
-        if self.lmList:
-            # Compare thumb tip against thumb base
-            thumbTipIndex = self.tipIds[0]
-            thumbBaseIndex = thumbTipIndex - 1
+        # When Hand is on keyboard
+        # c[....]
+
+        # Thumb: Extension by Y displacement
+        # Fingers: Extension by Z displacement (beyond norm) or Y displacemen
+
+
+        fingers = []
+        handLandmarks = self.landmarks[hand.index]
+
+        if handLandmarks:
+            # Thumb is 'special'
+
+            tipIndex, baseIndex = self.referenceIds[0]
             isTipHigherThanBase = (
-                self.lmList[thumbTipIndex][upAxis] > self.lmList[thumbBaseIndex][upAxis]
+                handLandmarks[tipIndex][Axis.X] < handLandmarks[baseIndex][Axis.X]
             )
+
+            # Left hand is inverted for the thumb
+            isTipHigherThanBase = isTipHigherThanBase if hand == Handness.RightHand else not isTipHigherThanBase
+
+            # # It is also inverted if the palm is not facing the camera
+            isTipHigherThanBase = isTipHigherThanBase if self.isPalmFacingCamera(hand) else not isTipHigherThanBase
+
             fingers.append(isTipHigherThanBase)
 
-            # Fingers
-            for id in range(1, 5):
-                tipIndex = self.tipIds[id]
-                baseIndex = self.tipIds[id] - 2
+            for tipIndex, baseIndex in self.referenceIds[1:]:
                 isTipHigherThanBase = (
-                    self.lmList[tipIndex][upAxis] < self.lmList[baseIndex][upAxis]
+                    handLandmarks[tipIndex][upAxis] < handLandmarks[baseIndex][upAxis]
                 )
                 fingers.append(isTipHigherThanBase)
 
@@ -110,9 +206,11 @@ class HandDetector:
             return [0, 0, 0, 0, 0]
         return fingers
 
-    def findDistance(self, p1, p2, img, draw=True, r=15, t=3):
-        x1, y1 = self.lmList[p1][1:]
-        x2, y2 = self.lmList[p2][1:]
+    def findDistance(self, p1, p2, img, hand=Handness.LeftHand, draw=True, r=15, t=3):
+        handLandmarks = self.landmarks[hand.index]
+
+        x1, y1 = handLandmarks[p1][1:]
+        x2, y2 = handLandmarks[p2][1:]
         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
 
         if draw:
@@ -123,42 +221,3 @@ class HandDetector:
         length = math.hypot(x2 - x1, y2 - y1)
 
         return length, img, [x1, y1, x2, y2, cx, cy]
-
-
-def main():
-    pTime = 0
-    cTime = 0
-    cap = cv2.VideoCapture(0)
-    detector = HandDetector()
-    while True:
-        success, img = cap.read()
-        if success:
-            img = detector.findHands(img)
-            lmList, bbox = detector.findPosition(img)
-            print("lm Lit", lmList)
-            if len(lmList) != 0:
-                # thumb finger landmark
-                # print(lmList[4])
-
-                pass
-
-            cTime = time.time()
-            fps = 1 / (cTime - pTime)
-            pTime = cTime
-
-            cv2.putText(
-                img,
-                str(int(fps)),
-                (10, 70),
-                cv2.FONT_HERSHEY_PLAIN,
-                3,
-                (255, 0, 255),
-                3,
-            )
-
-            cv2.imshow("Image", img)
-            cv2.waitKey(1)
-
-
-if __name__ == "__main__":
-    main()

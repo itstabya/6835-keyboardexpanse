@@ -2,4 +2,3 @@
 # See LICENSE.txt for details.
 
 """This package abstracts os details for plover."""
-
