@@ -19,12 +19,19 @@ class Window:
             self.values.pop(0)
             self.recent_index -= 1
 
-        self.values.append((time, item))
+        if len(self.values) and self.values[-1] and self.values[-1][1] == item:
+            self.values[-1] = (time, item)
+        else:
+            self.values.append((time, item))
 
         return float(len(self.values) - self.recent_index) / len(self.values)
 
     def characters(self):
         return '+'.join(c for ts, c in self.values)
+
+    def clear(self):
+        self.values = []
+        self.recent_index = 0
 
 class Relay:
     def __init__(self, record=False, supress=False) -> None:
@@ -72,12 +79,12 @@ class Relay:
         elif key in self.pressed:
             self.pressed.remove(key)
 
-        new_status = f'pressed: {self.recent.characters()}'
-        if self._status != new_status:
-            # ke.send_backspaces(len(status))
-            # ke.send_string(new_status)
-            print(self._status)
-            self._status = new_status
+        # new_status = f'pressed: {self.recent.characters()}'
+        # if self._status != new_status:
+        #     # ke.send_backspaces(len(status))
+        #     # ke.send_string(new_status)
+        #     print(self._status)
+        #     self._status = new_status
 
         # Log
         if self.record:
