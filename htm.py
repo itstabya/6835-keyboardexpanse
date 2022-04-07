@@ -228,7 +228,7 @@ class HandDetector:
         handLandmarks = self.landmarks[hand.index]
 
         if not handLandmarks:
-            return
+            return 1, img, []
 
         h, w, _ = img.shape
         x1, y1, _ = handLandmarks[p1]

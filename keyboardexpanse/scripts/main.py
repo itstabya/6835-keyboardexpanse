@@ -32,10 +32,14 @@ def main():
     plocX, plocY = 0, 0
     clocX, clocY = 0, 0
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(-1)
     cap.set(3, wCam)
     cap.set(4, hCam)
     detector = htm.HandDetector(maxHands=2)
+
+    # cap.release()
+    # # Destroy all the windows
+    # cv2.destroyAllWindows()
 
     monitor = get_monitors()[0]
     wScr, hScr = monitor.width, monitor.height
@@ -50,7 +54,7 @@ def main():
             # mirror image for convenience
             img = cv2.flip(img, 2)
             h_img = detector.process(img)
-
+            
             # 3. Check which fingers are up
             for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
                 handLandmarks = detector.landmarks[handness.index]
@@ -108,18 +112,21 @@ def main():
 
                 prevThumb = fingers[0]
 
-                new_status = f'pressed: {r.recent.characters()}'
+
+                characters = r.recent.characters()
+                new_status = f'pressed: {characters}'
                 if prev_status != new_status:
                     # ke.send_backspaces(len(status))
                     # ke.send_string(new_status)
                     print(prev_status)
                     prev_status = new_status
 
-                if "w+e+r" in r.recent.characters():
+
+                if "w+e+r" in characters:
                     print("lswipe")
                     r.recent.clear()
 
-                if "o+i+u" in r.recent.characters():
+                if "o+i+u" in characters:
                     print("rswipe")
                     r.recent.clear()
 
@@ -130,8 +137,12 @@ def main():
             cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
             # 12. Display
             cv2.imshow("Image", img)
+            # print(img)
             # if cv2.waitKey(1) & 0xFF == ord("q"):
             #     break
+
+            cv2.waitKey(1)
+            # time.sleep(1)
 
     except KeyboardInterrupt:
         pass
