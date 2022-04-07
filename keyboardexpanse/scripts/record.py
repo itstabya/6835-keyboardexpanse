@@ -2,6 +2,7 @@ import time
 from keyboardexpanse.relay import Relay
 from pynput import keyboard
 
+
 def main():
     """Launch Keyboard Expanse."""
     print("Launching Record Keyboard Expanse")
@@ -17,9 +18,9 @@ def main():
         try:
             # r.send_key_combination('shift(a)')
             # r.send_key_combination('alt_l(tab)')
-            import pyautogui,time
+            import pyautogui, time
 
-            pyautogui.hotkey('alt', 'tab', interval=0.5)
+            pyautogui.hotkey("alt", "tab", interval=0.5)
 
             time.sleep(5)
         except KeyboardInterrupt:

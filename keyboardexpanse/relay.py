@@ -5,6 +5,7 @@ import time
 from keyboardexpanse.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
 
+
 @dataclass
 class Window:
     values = []
@@ -14,7 +15,9 @@ class Window:
     def insert(self, time, item):
 
         # Expire older than 5
-        while self.values and self.values[0][0] < time - timedelta(milliseconds=self.length_milliseconds):
+        while self.values and self.values[0][0] < time - timedelta(
+            milliseconds=self.length_milliseconds
+        ):
             self.values.pop(0)
             self.recent_index -= 1
 
@@ -26,11 +29,12 @@ class Window:
         return float(len(self.values) - self.recent_index) / len(self.values)
 
     def characters(self):
-        return '+'.join(c for ts, c in self.values)
+        return "+".join(c for ts, c in self.values)
 
     def clear(self):
         self.values = []
         self.recent_index = 0
+
 
 class Relay:
     def __init__(self, record=False, supress=False) -> None:
@@ -70,7 +74,7 @@ class Relay:
     def on_event(self, key, action):
         # print(key, action)
 
-        if action == 'pressed':
+        if action == "pressed":
             self.recent.insert(datetime.datetime.now(), key)
 
         if "pressed" == action:

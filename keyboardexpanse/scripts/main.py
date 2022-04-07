@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import htm
 import time
-import autopy 
+import autopy
 from screeninfo import get_monitors
+
 # import pyautogui
 
 from keyboardexpanse.hands.landmarks import HandLandmark
@@ -21,6 +22,7 @@ frameR = 100
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
     autopy.mouse.move(x, y)
+
 
 def main():
     """Launch Keyboard Expanse."""
@@ -59,7 +61,13 @@ def main():
 
                 fingers = detector.fingersUp(hand=handness, upAxis=htm.Axis.Y)
                 imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
-                cv2.rectangle(img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2)
+                cv2.rectangle(
+                    img,
+                    (frameR, frameR),
+                    (wCam - frameR, hCam - frameR),
+                    (255, 0, 255),
+                    2,
+                )
                 for finger, isUp in enumerate(fingers):
                     if isUp:
                         x, y = imageLandmarks[htm.TIPS[finger]]
@@ -89,12 +97,16 @@ def main():
                 if fingers == [0, 1, 1, 0, 0]:
                     # 9. Find distance between fingers
                     length, img, lineInfo = detector.findDistance(
-                        HandLandmark.INDEX_FINGER_TIP, HandLandmark.MIDDLE_FINGER_TIP, img
+                        HandLandmark.INDEX_FINGER_TIP,
+                        HandLandmark.MIDDLE_FINGER_TIP,
+                        img,
                     )
                     print(length)
                     # 10. Click mouse if distance short
                     if length < 0.07:
-                        cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
+                        cv2.circle(
+                            img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
+                        )
                         autopy.mouse.click()
 
                 # Three finger motion
@@ -106,17 +118,15 @@ def main():
 
                 prevThumb = fingers[0]
 
-
             # Character control
             characters = r.recent.characters()
             # print(f"{time.time()} {characters}")
-            new_status = f'pressed: {characters}'
+            new_status = f"pressed: {characters}"
             if prev_status != new_status:
                 # ke.send_backspaces(len(status))
                 # ke.send_string(new_status)
                 print(prev_status)
                 prev_status = new_status
-
 
             if "e+r+t" in characters:
                 print("lswipe")
@@ -132,18 +142,20 @@ def main():
             cTime = time.time()
             fps = 1 / (cTime - pTime)
 
-            if (cTime - pTime) < .02:
-                time.sleep(.02 - (cTime - pTime))
+            if (cTime - pTime) < 0.02:
+                time.sleep(0.02 - (cTime - pTime))
 
             pTime = cTime
-            cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
+            cv2.putText(
+                img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
+            )
             # 12. Display
             cv2.imshow("Image", img)
             cv2.waitKey(1)
 
     except KeyboardInterrupt:
         pass
-    
+
     # After the loop release the cap object
     cap.release()
     # Destroy all the windows
