@@ -113,8 +113,9 @@ def main():
                 prevThumb = fingers[0]
 
 
+            # Character control
             characters = r.recent.characters()
-            print(f"{time.time()} {characters}")
+            # print(f"{time.time()} {characters}")
             new_status = f'pressed: {characters}'
             if prev_status != new_status:
                 # ke.send_backspaces(len(status))
@@ -136,7 +137,7 @@ def main():
             fps = 1 / (cTime - pTime)
 
             if (cTime - pTime) < .02:
-                time.sleep(.02 - cTime - pTime)
+                time.sleep(.02 - (cTime - pTime))
 
             pTime = cTime
             cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
