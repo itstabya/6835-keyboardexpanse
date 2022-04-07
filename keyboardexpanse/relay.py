@@ -1,7 +1,30 @@
+from dataclasses import dataclass
+from datetime import timedelta
+import datetime
 import time
 from keyboardexpanse.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
 
+@dataclass
+class Window:
+    values = []
+    recent_index = 0
+
+    length_milliseconds = 5e2
+
+    def insert(self, time, item):
+
+        # Expire older than 5
+        while self.values and self.values[0][0] < time - timedelta(milliseconds=self.length_milliseconds):
+            self.values.pop(0)
+            self.recent_index -= 1
+
+        self.values.append((time, item))
+
+        return float(len(self.values) - self.recent_index) / len(self.values)
+
+    def characters(self):
+        return '+'.join(c for ts, c in self.values)
 
 class Relay:
     def __init__(self, record=False, supress=False) -> None:
@@ -9,6 +32,7 @@ class Relay:
         self.supress = supress
         self.pressed = set()
         self.command = "text"
+        self.recent = Window()
 
         self._kc = KeyboardCapture()
         self._ke = KeyboardEmulation()
@@ -39,17 +63,21 @@ class Relay:
 
     def on_event(self, key, action):
         # print(key, action)
+
+        if action == 'pressed':
+            self.recent.insert(datetime.datetime.now(), key)
+
         if "pressed" == action:
             self.pressed.add(key)
         elif key in self.pressed:
             self.pressed.remove(key)
 
-        # new_status = 'pressed: ' + '+'.join(self.pressed)
-        # if self._status != new_status:
-        #     # ke.send_backspaces(len(status))
-        #     # ke.send_string(new_status)
-        #     print(self._status)
-        #     self._status = new_status
+        new_status = f'pressed: {self.recent.characters()}'
+        if self._status != new_status:
+            # ke.send_backspaces(len(status))
+            # ke.send_string(new_status)
+            print(self._status)
+            self._status = new_status
 
         # Log
         if self.record:
