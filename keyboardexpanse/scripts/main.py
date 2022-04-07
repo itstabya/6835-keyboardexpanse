@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import htm
 import time
-# import autopy 
+import autopy 
 from screeninfo import get_monitors
 # import pyautogui
 
@@ -12,15 +12,15 @@ from keyboardexpanse.relay import Relay
 ##########################
 wCam, hCam = 640, 480
 smoothening = 7
-# wScr, hScr = autopy.screen.size()
+wScr, hScr = autopy.screen.size()
+frameR = 100
 
 #########################
 
 
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
-    # autopy.mouse.move(wScr - x, y)
-    ...
+    autopy.mouse.move(x, y)
 
 def main():
     """Launch Keyboard Expanse."""
@@ -37,10 +37,6 @@ def main():
     cap.set(4, hCam)
     detector = htm.HandDetector(maxHands=2)
 
-    # cap.release()
-    # # Destroy all the windows
-    # cv2.destroyAllWindows()
-
     monitor = get_monitors()[0]
     wScr, hScr = monitor.width, monitor.height
 
@@ -54,7 +50,6 @@ def main():
             # mirror image for convenience
             img = cv2.flip(img, 2)
             h_img = detector.process(img)
-            
             # 3. Check which fingers are up
             for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
                 handLandmarks = detector.landmarks[handness.index]
@@ -64,7 +59,7 @@ def main():
 
                 fingers = detector.fingersUp(hand=handness, upAxis=htm.Axis.Y)
                 imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
-
+                cv2.rectangle(img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2)
                 for finger, isUp in enumerate(fingers):
                     if isUp:
                         x, y = imageLandmarks[htm.TIPS[finger]]
@@ -78,6 +73,8 @@ def main():
                     # 5. Convert Coordinates to pixels
                     x3 = int(np.interp(indexX, (0, 1), (0, wScr)))
                     y3 = int(np.interp(indexY, (0, 1), (0, hScr)))
+                    # x3 = int(np.interp(indexX*wScr, (frameR, wCam - frameR), (0, wScr)))
+                    # y3 = int(np.interp(indexY*hScr, (frameR, hCam - frameR), (0, hScr)))
                     # 6. Smoothen Values
                     clocX = plocX + (x3 - plocX) / smoothening
                     clocY = plocY + (y3 - plocY) / smoothening
@@ -98,14 +95,11 @@ def main():
                     # 10. Click mouse if distance short
                     if length < 0.07:
                         cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
-                        # pyautogui.click()
-                        # autopy.mouse.click()
-                        # pass
+                        autopy.mouse.click()
 
                 # Three finger motion
                 if fingers[1:] == [1, 0, 0, 1]:
                     thumbOut = fingers[0]
-
                     if thumbOut and prevThumb != thumbOut:
                         print("Sending Alt Tab")
                         r.send_key_combination("super_l(Tab)")
@@ -126,10 +120,12 @@ def main():
 
             if "e+r+t" in characters:
                 print("lswipe")
+                r.send_key_combination("control(right)")
                 r.recent.clear()
 
             if "o+i+u" in characters:
                 print("rswipe")
+                r.send_key_combination("control(left)")
                 r.recent.clear()
 
             # 11. Frame Rate
@@ -143,13 +139,7 @@ def main():
             cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
             # 12. Display
             cv2.imshow("Image", img)
-            # print(img)
-            # if cv2.waitKey(1) & 0xFF == ord("q"):
-            #     break
-
-
             cv2.waitKey(1)
-            # time.sleep(1)
 
     except KeyboardInterrupt:
         pass
