@@ -1,19 +1,20 @@
 import objc
-NSUserNotification = objc.lookUpClass('NSUserNotification')
-NSUserNotificationCenter = objc.lookUpClass('NSUserNotificationCenter')
-NSObject = objc.lookUpClass('NSObject')
+
+NSUserNotification = objc.lookUpClass("NSUserNotification")
+NSUserNotificationCenter = objc.lookUpClass("NSUserNotificationCenter")
+NSObject = objc.lookUpClass("NSObject")
 
 from keyboardexpanse import log, __name__ as __software_name__
 import logging
 
 
 class OSXNotificationHandler(logging.Handler):
-    """ Handler using OS X Notification Center to show messages. """
+    """Handler using OS X Notification Center to show messages."""
 
     def __init__(self):
         super().__init__()
         self.setLevel(log.WARNING)
-        self.setFormatter(log.NoExceptionTracebackFormatter('%(message)s'))
+        self.setFormatter(log.NoExceptionTracebackFormatter("%(message)s"))
 
     def emit(self, record):
         # Notification Center has no levels or timeouts.
@@ -31,6 +32,7 @@ class AlwaysPresentNSDelegator(NSObject):
     """
     Custom delegator to force presenting even if Plover is in the foreground.
     """
+
     def userNotificationCenter_didActivateNotification_(self, ns, note):
         # Do nothing
         return
@@ -38,5 +40,6 @@ class AlwaysPresentNSDelegator(NSObject):
     def userNotificationCenter_shouldPresentNotification_(self, ns, note):
         # Force notification, even if frontmost application.
         return True
+
 
 always_present_delegator = AlwaysPresentNSDelegator.alloc().init()

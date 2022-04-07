@@ -18,14 +18,15 @@ emulate keyboard input.
 
 from keyboardexpanse.oslayer.config import PLATFORM
 
-KEYBOARDCONTROL_NOT_FOUND_FOR_OS = \
-        "No keyboard control module was found for platform: %s" % PLATFORM
+KEYBOARDCONTROL_NOT_FOUND_FOR_OS = (
+    "No keyboard control module was found for platform: %s" % PLATFORM
+)
 
-if PLATFORM in {'linux', 'bsd'}:
+if PLATFORM in {"linux", "bsd"}:
     from keyboardexpanse.oslayer import xkeyboardcontrol as keyboardcontrol
-elif PLATFORM == 'win':
+elif PLATFORM == "win":
     from keyboardexpanse.oslayer import winkeyboardcontrol as keyboardcontrol
-elif PLATFORM == 'mac':
+elif PLATFORM == "mac":
     from keyboardexpanse.oslayer import osxkeyboardcontrol as keyboardcontrol
 else:
     raise Exception(KEYBOARDCONTROL_NOT_FOUND_FOR_OS)
@@ -35,7 +36,7 @@ class KeyboardCapture(keyboardcontrol.KeyboardCapture):
     """Listen to keyboard events."""
 
     # Supported keys.
-    SUPPORTED_KEYS_LAYOUT = '''
+    SUPPORTED_KEYS_LAYOUT = """
     Escape  F1 F2 F3 F4  F5 F6 F7 F8  F9 F10 F11 F12
 
       `  1  2  3  4  5  6  7  8  9  0  -  =  \\ BackSpace  Insert Home Page_Up
@@ -43,16 +44,17 @@ class KeyboardCapture(keyboardcontrol.KeyboardCapture):
            a  s  d  f  g  h  j  k  l  ;  '      Return
             z  x  c  v  b  n  m  ,  .  /                          Up
                      space                                   Left Down Right
-    '''
+    """
     SUPPORTED_KEYS = tuple(SUPPORTED_KEYS_LAYOUT.split())
 
 
 class KeyboardEmulation(keyboardcontrol.KeyboardEmulation):
     """Emulate printable key presses and backspaces."""
+
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import time
 
@@ -60,15 +62,15 @@ if __name__ == '__main__':
     ke = KeyboardEmulation()
 
     pressed = set()
-    status = 'pressed: '
+    status = "pressed: "
 
     def on_event(key, action):
         print(key, action)
-        if 'pressed' == action:
+        if "pressed" == action:
             pressed.add(key)
         elif key in pressed:
             pressed.remove(key)
-            
+
         ke.send_string(key)
 
         # new_status = 'pressed: ' + '+'.join(pressed)
@@ -77,13 +79,11 @@ if __name__ == '__main__':
         #     ke.send_string(new_status)
         #     status = new_status
 
-        
-
-    kc.key_down = lambda k: on_event(k, 'pressed')
-    kc.key_up = lambda k: on_event(k, 'released')
+    kc.key_down = lambda k: on_event(k, "pressed")
+    kc.key_up = lambda k: on_event(k, "released")
     kc.suppress_keyboard(KeyboardCapture.SUPPORTED_KEYS)
     kc.start()
-    print('Press CTRL-c to quit.')
+    print("Press CTRL-c to quit.")
     try:
         while True:
             time.sleep(1)

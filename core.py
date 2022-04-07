@@ -3,7 +3,10 @@ import numpy as np
 import htm
 import time
 
-# import autopy
+from screeninfo import get_monitors
+import pyautogui
+
+from keyboardexpanse.hands.landmarks import HandLandmark
 
 ##########################
 wCam, hCam = 640, 480
@@ -22,17 +25,12 @@ detector = htm.HandDetector(maxHands=2)
 
 # print(wScr, hScr)
 
-wScr, hScr = autopy.screen.size()
-
-mouse = Controller()
-# mouse.position set mouse position to the middle of the screenn
+monitor = get_monitors()[0]
+wScr, hScr = monitor.width, monitor.height
 
 def simulate_on_move(x, y):
-    ...
-    # autopy.mouse.move(wScr - x, y)
-    # pynput.mouse.move('')
-    ...
-
+    tX, tY = wScr - x, y
+    pyautogui.moveTo(tX, tY)
 
 def simulate_on_click(x, y, button, pressed):
     ...
@@ -41,21 +39,26 @@ def simulate_on_click(x, y, button, pressed):
 while True:
     # 1. Find hand Landmarks
     success, img = cap.read()
-    img = detector.findHands(img)
-    lmList, which_hands = detector.findPosition(img)
-    print(which_hands)
+    # mirror image for convenience
+    img = cv2.flip(img, 2)
+    h_img = detector.process(img)
+    rightHandLandmarks, bbox = detector.findImagePosition(img)
 
     # 2. Get the tip of the index and middle fingers
-    if len(lmList) != 0:
-        x1, y1 = lmList[8][1:]
-        x2, y2 = lmList[12][1:]
+    if len(rightHandLandmarks) != 0:
+        x1, y1 = rightHandLandmarks[HandLandmark.INDEX_FINGER_TIP]
+        x2, y2 = rightHandLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
         # print(x1, y1, x2, y2)
 
-    # # 3. Check which fingers are up
-    fingers = detector.fingersUp()
-    cv2.rectangle(
-        img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2
-    )
+    # 3. Check which fingers are up
+    for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
+        fingers = detector.fingersUp(hand=handness, upAxis = htm.Axis.Y)
+        imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
+        for finger, isUp in enumerate(fingers):
+            if isUp:
+                x, y = imageLandmarks[htm.TIPS[finger]]
+                cv2.circle(img, (x, y), 10, (0, 0, 0), cv2.FILLED)
+
     # 4. Only Index Finger : Moving Mode
     if fingers[1] == 1 and fingers[2] == 0:
         # 5. Convert Coordinates
@@ -65,7 +68,11 @@ while True:
         clocX = plocX + (x3 - plocX) / smoothening
         clocY = plocY + (y3 - plocY) / smoothening
 
+        print(f"{x1}, {y1} -> {x3}, {y3}")
+
         # 7. Move Mouse
+        if abs(clocX - plocX) > 10 or abs(clocY - plocY) > 10:
+            simulate_on_move(clocX, clocY)
         cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
         plocX, plocY = clocX, clocY
         simulate_on_move(clocX, clocY)
@@ -88,9 +95,8 @@ while True:
     pTime = cTime
     cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
     # 12. Display
-    flip_img = cv2.flip(img, 2) # mirror image for convenience 
-    cv2.imshow("Image", flip_img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    cv2.imshow("Image", img)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 # After the loop release the cap object

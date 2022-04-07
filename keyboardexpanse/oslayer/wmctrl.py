@@ -1,7 +1,7 @@
 from keyboardexpanse.oslayer.config import PLATFORM
 
 
-if PLATFORM == 'win':
+if PLATFORM == "win":
 
     from ctypes import windll, wintypes
 
@@ -11,23 +11,29 @@ if PLATFORM == 'win':
 
     SetForegroundWindow = windll.user32.SetForegroundWindow
     SetForegroundWindow.argtypes = [
-        wintypes.HWND, # hWnd
+        wintypes.HWND,  # hWnd
     ]
     SetForegroundWindow.restype = wintypes.BOOL
 
 
-elif PLATFORM == 'mac':
+elif PLATFORM == "mac":
 
-    from Cocoa import NSWorkspace, NSRunningApplication, NSApplicationActivateIgnoringOtherApps
+    from Cocoa import (
+        NSWorkspace,
+        NSRunningApplication,
+        NSApplicationActivateIgnoringOtherApps,
+    )
 
     def GetForegroundWindow():
         return NSWorkspace.sharedWorkspace().frontmostApplication().processIdentifier()
 
     def SetForegroundWindow(pid):
-        target_window = NSRunningApplication.runningApplicationWithProcessIdentifier_(pid)
+        target_window = NSRunningApplication.runningApplicationWithProcessIdentifier_(
+            pid
+        )
         target_window.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
 
-elif PLATFORM in {'linux', 'bsd'}:
+elif PLATFORM in {"linux", "bsd"}:
 
     from keyboardexpanse.oslayer.xwmctrl import WmCtrl
 

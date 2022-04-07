@@ -1,16 +1,11 @@
 from keyboardexpanse.relay import Relay
-from screeninfo import get_monitors
-from pynput import mouse
-
-monitors = []
 
 
 def main():
     """Launch Keyboard Expanse."""
+    r = Relay(record=True, supress=True)
+    r.command = "lswipe"
 
-    monitors = get_monitors()
-
-    r = Relay()
     r.start()
 
     r.join()
