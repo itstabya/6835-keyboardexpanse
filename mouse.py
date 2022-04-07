@@ -6,6 +6,7 @@ import autopy
 import pynput 
 from pynput.mouse import Button, Controller
 
+MOUSE_ON = False
 
 ##########################
 wCam, hCam = 640, 480
@@ -35,20 +36,6 @@ def simulate_on_move(x, y):
     # print(wScr-x, y)
     # mouse.position(wScr-x, y)
 
-# # Read pointer position
-# print('The current pointer position is {0}'.format(
-#     mouse.position))
-
-# # Set pointer position
-# mouse.position = (10, 20)
-# print('Now we have moved it to {0}'.format(
-#     mouse.position))
-
-# # Move pointer relative to current position
-# mouse.move(5, -5)
-
-
-
 def simulate_on_click(x, y, button, pressed):
     ...
 
@@ -67,7 +54,7 @@ while True:
         # print(x1, y1, x2, y2)
 
     # # 3. Check which fingers are up
-    fingers = detector.fingersUp()
+    fingers = detector.fingersUp(upAxis=2)
     cv2.rectangle(
         img, (frameR, frameR), (wCam - frameR, hCam - frameR), (255, 0, 255), 2
     )
@@ -87,15 +74,15 @@ while True:
         
 
     # # 8. Both Index and middle fingers are up : Clicking Mode
-    # if fingers[1] == 1 and fingers[2] == 1:
-    #     # 9. Find distance between fingers
-    #     length, img, lineInfo = detector.findDistance(8, 12, img)
-    #     print(length)
-    #     # 10. Click mouse if distance short
-    #     if length < 40:
-    #         cv2.circle(img, (lineInfo[4], lineInfo[5]),
-    #         15, (0, 255, 0), cv2.FILLED)
-    #         autopy.mouse.click()
+    if fingers[1] == 1 and fingers[2] == 1:
+        # 9. Find distance between fingers
+        length, img, lineInfo = detector.findDistance(8, 12, img)
+        print(length)
+        # 10. Click mouse if distance short
+        if length < 30:
+            cv2.circle(img, (lineInfo[4], lineInfo[5]),
+            15, (0, 255, 0), cv2.FILLED)
+            autopy.mouse.click()
 
     # 11. Frame Rate
     cTime = time.time()

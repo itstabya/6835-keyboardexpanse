@@ -87,11 +87,8 @@ class HandDetector:
           return self.lmList, which_hands # ALWAYS L TO R if BOTH HANDS
         return [], "None"
 
-    def fingersUp(self, upAxis=1):
-        # upAxis:
-        # 0 = X
-        # 1 = Y
-        # 2 = Z
+    def fingersUp(self, upAxis=2):
+        # upAxis: # 0=X, 1=Y, 2=Z
 
         fingers = []
 
@@ -115,9 +112,10 @@ class HandDetector:
                 fingers.append(isTipHigherThanBase)
 
             # totalFingers = fingers.count(1)
+            return fingers
         else:
             return [0, 0, 0, 0, 0]
-        return fingers
+        
 
     def findDistance(self, p1, p2, img, draw=True, r=15, t=3):
         x1, y1 = self.lmList[p1][1:]
