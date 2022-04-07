@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import htm
 import time
-
+import autopy 
 from screeninfo import get_monitors
-import pyautogui
+# import pyautogui
 
 from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.relay import Relay
@@ -12,11 +12,14 @@ from keyboardexpanse.relay import Relay
 ##########################
 wCam, hCam = 640, 480
 smoothening = 7
+wScr, hScr = autopy.screen.size()
+
 #########################
 
 
 def simulate_on_move(x, y):
-    pyautogui.moveTo(x, y)
+    # pyautogui.moveTo(x, y)
+    autopy.mouse.move(wScr - x, y)
 
 def main():
     """Launch Keyboard Expanse."""
@@ -88,7 +91,9 @@ def main():
                 # 10. Click mouse if distance short
                 if length < 0.07:
                     cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
-                    pyautogui.click()
+                    # pyautogui.click()
+                    autopy.mouse.click()
+                    # pass
 
             # Three finger motion
             if fingers[1:] == [1, 1, 1, 0]:
@@ -96,7 +101,7 @@ def main():
 
                 if thumbOut and prevThumb != thumbOut:
                     print("Sending Alt Tab")
-                    r.send_key_combination("Alt_L(Tab)")
+                    r.send_key_combination("super_l(Tab)")
 
             prevThumb = fingers[0]    
 
