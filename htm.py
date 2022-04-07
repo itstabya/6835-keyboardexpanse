@@ -227,6 +227,9 @@ class HandDetector:
     def findDistance(self, p1, p2, img, hand=Handness.RightHand, draw=True, r=15, t=3):
         handLandmarks = self.landmarks[hand.index]
 
+        if not handLandmarks:
+            return
+
         h, w, _ = img.shape
         x1, y1, _ = handLandmarks[p1]
         x2, y2, _ = handLandmarks[p2]
