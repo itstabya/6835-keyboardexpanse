@@ -113,26 +113,31 @@ def main():
                 prevThumb = fingers[0]
 
 
-                characters = r.recent.characters()
-                new_status = f'pressed: {characters}'
-                if prev_status != new_status:
-                    # ke.send_backspaces(len(status))
-                    # ke.send_string(new_status)
-                    print(prev_status)
-                    prev_status = new_status
+            characters = r.recent.characters()
+            print(f"{time.time()} {characters}")
+            new_status = f'pressed: {characters}'
+            if prev_status != new_status:
+                # ke.send_backspaces(len(status))
+                # ke.send_string(new_status)
+                print(prev_status)
+                prev_status = new_status
 
 
-                if "w+e+r" in characters:
-                    print("lswipe")
-                    r.recent.clear()
+            if "e+r+t" in characters:
+                print("lswipe")
+                r.recent.clear()
 
-                if "o+i+u" in characters:
-                    print("rswipe")
-                    r.recent.clear()
+            if "o+i+u" in characters:
+                print("rswipe")
+                r.recent.clear()
 
             # 11. Frame Rate
             cTime = time.time()
             fps = 1 / (cTime - pTime)
+
+            if (cTime - pTime) < .02:
+                time.sleep(.02 - cTime - pTime)
+
             pTime = cTime
             cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
             # 12. Display
@@ -140,6 +145,7 @@ def main():
             # print(img)
             # if cv2.waitKey(1) & 0xFF == ord("q"):
             #     break
+
 
             cv2.waitKey(1)
             # time.sleep(1)

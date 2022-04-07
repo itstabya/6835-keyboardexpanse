@@ -9,7 +9,6 @@ from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmu
 class Window:
     values = []
     recent_index = 0
-
     length_milliseconds = 5e2
 
     def insert(self, time, item):
