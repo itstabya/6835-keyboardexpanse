@@ -96,7 +96,8 @@ def main():
                     # pass
 
             # Three finger motion
-            if fingers[1:] == [1, 1, 0, 0]:
+            if fingers[1:] == [1, 0, 0, 1]:
+              
                 thumbOut = fingers[0]
 
                 if thumbOut and prevThumb != thumbOut:
@@ -105,11 +106,13 @@ def main():
 
             prevThumb = fingers[0]
 
-            if "w+e+r+t+y" in r.recent.characters():
-                print("lswipe")
+            if "r+t+y" in r.recent.characters():
+              print("lswipe")
+              r.send_key_combination("Control(Left)")
 
-            if "o+i+u+y" in r.recent.characters():
-                print("rswipe")
+            if "i+u+y" in r.recent.characters():
+              print("rswipe")
+              r.send_key_combination("Control(Right)")
 
         # 11. Frame Rate
         cTime = time.time()
