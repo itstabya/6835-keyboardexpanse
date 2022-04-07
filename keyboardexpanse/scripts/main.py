@@ -96,7 +96,7 @@ def main():
                     # pass
 
             # Three finger motion
-            if fingers[1:] == [1, 1, 1, 0]:
+            if fingers[1:] == [1, 1, 0, 0]:
                 thumbOut = fingers[0]
 
                 if thumbOut and prevThumb != thumbOut:
