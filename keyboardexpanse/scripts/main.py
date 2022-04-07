@@ -103,7 +103,13 @@ def main():
                     print("Sending Alt Tab")
                     r.send_key_combination("super_l(Tab)")
 
-            prevThumb = fingers[0]    
+            prevThumb = fingers[0]
+
+            if "w+e+r+t+y" in r.recent.characters():
+                print("lswipe")
+
+            if "o+i+u+y" in r.recent.characters():
+                print("rswipe")
 
         # 11. Frame Rate
         cTime = time.time()
