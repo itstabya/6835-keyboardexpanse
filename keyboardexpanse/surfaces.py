@@ -3,14 +3,19 @@ from typing import Optional
 import numpy as np
 import cv2
 
-from keyboardexpanse.utils import condenseToNPoints, contourOffset, fourCornersSort, weighted_mean
+from keyboardexpanse.utils import (
+    condenseToNPoints,
+    contourOffset,
+    fourCornersSort,
+    weighted_mean,
+)
 
 KEYBOARD_SCALE = np.array([[0, 0], [0, 500], [1000, 500], [1000, 0]], np.float32)
 DEFAULT_KEYBOARD_SURFACE = np.array([[180, 60], [35, 450], [830, 415], [660, 50]])
 
 
 def transform_points(points, s_points, t_points):
-        # getPerspectiveTransform() needs float32
+    # getPerspectiveTransform() needs float32
     if s_points.dtype != np.float32:
         s_points = s_points.astype(np.float32)
     if t_points.dtype != np.float32:
@@ -29,11 +34,12 @@ def transform_points(points, s_points, t_points):
         else point_transform(points)
     )
 
+
 @dataclass
 class DetectSurfaces:
     surface_camspace: Optional[np.array] = None
     surface_confirmations: int = 0
-    
+
     background_colours = [
         # MacGregor (wood) desks :P
         ([0, 92, 39], [178, 216, 255]),
@@ -42,7 +48,7 @@ class DetectSurfaces:
         # Wire
         ([0, 18, 50], [178, 60, 79]),
         # Light Wood
-        ([2, 16, 174], [19, 158, 201])
+        ([2, 16, 174], [19, 158, 201]),
     ]
 
     surfacespace_dimensions: np.array = KEYBOARD_SCALE
@@ -59,13 +65,17 @@ class DetectSurfaces:
         return cv2.warpPerspective(img, M, (1000, 500))
 
     def to_surface_space(self, points):
-         return transform_points(points, self.surface_camspace, self.surfacespace_dimensions)
+        return transform_points(
+            points, self.surface_camspace, self.surfacespace_dimensions
+        )
 
     def to_cam_space(self, points):
-        return transform_points(points, self.surfacespace_dimensions, self.surface_camspace)
+        return transform_points(
+            points, self.surfacespace_dimensions, self.surface_camspace
+        )
 
     def detect(self, img):
-         # If the keyboard is stable, don't bother performing
+        # If the keyboard is stable, don't bother performing
         # detection
         if self.surface_confirmations > 50:
             return img
@@ -74,7 +84,6 @@ class DetectSurfaces:
 
         # Apply some helpful colour masks
         accumMask = np.zeros(hsv.shape[:2], dtype="uint8")
-
 
         # loop over the boundaries
         for (lower, upper) in self.background_colours:
@@ -140,7 +149,9 @@ class DetectSurfaces:
         for cnt in contours:
             perimeter = cv2.arcLength(cnt, True)
             ALLOWED_ERROR = 0.03
-            approx = cv2.convexHull(cv2.approxPolyDP(cnt, perimeter * ALLOWED_ERROR, True))
+            approx = cv2.convexHull(
+                cv2.approxPolyDP(cnt, perimeter * ALLOWED_ERROR, True)
+            )
 
             # Check we have a 4 point approximation
             # Total area > 1000
@@ -148,22 +159,31 @@ class DetectSurfaces:
             area = cv2.contourArea(approx)
             isAlmostQuad = 4 <= len(approx) < 6
             isLarge = maxAreaFound < area < MAX_CONTOUR_AREA
-            
+
             # isConvex = cv2.isContourConvex(quadApprox)
             if isAlmostQuad and isLarge:
                 maxAreaFound = area
-                normApprox = contourOffset(approx, (-BORDER_SIZE, -BORDER_SIZE)).squeeze()
+                normApprox = contourOffset(
+                    approx, (-BORDER_SIZE, -BORDER_SIZE)
+                ).squeeze()
                 # normApprox = condenseToNPoints(normApprox, N=4)
-            
+
                 newContour = fourCornersSort(normApprox)
                 print(f"Adjusting Surface {self.surface_confirmations}", newContour)
-                self.surface_camspace = weighted_mean(self.surface_camspace, newContour, self.surface_confirmations, default=DEFAULT_KEYBOARD_SURFACE)
+                self.surface_camspace = weighted_mean(
+                    self.surface_camspace,
+                    newContour,
+                    self.surface_confirmations,
+                    default=DEFAULT_KEYBOARD_SURFACE,
+                )
                 self.surface_confirmations += 1
 
             if isLarge:
-                normApprox = contourOffset(approx, (-BORDER_SIZE, -BORDER_SIZE)).squeeze()
-                quadApprox = condenseToNPoints(normApprox, N = 4)
-                
+                normApprox = contourOffset(
+                    approx, (-BORDER_SIZE, -BORDER_SIZE)
+                ).squeeze()
+                quadApprox = condenseToNPoints(normApprox, N=4)
+
                 simplified.append(normApprox)
                 simplified.append(quadApprox)
 
@@ -173,5 +193,5 @@ class DetectSurfaces:
         cv2.drawContours(img, simplified, -1, (0, 255, 0), 3)
         for s in simplified:
             for k in s:
-                cv2.drawMarker(img, k, (255,255,0))
+                cv2.drawMarker(img, k, (255, 255, 0))
         return img

@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 
+
 def resize(img, height=800):
     rat = height / img.shape[0]
     return cv2.resize(img, (int(rat * img.shape[1]), height))
 
 
-def condenseToNPoints(pts, N = 4):
+def condenseToNPoints(pts, N=4):
     # Find the N closest pairs
     # Merge to average values
 
@@ -18,17 +19,18 @@ def condenseToNPoints(pts, N = 4):
             for j, q in enumerate(pts):
                 if i == j:
                     continue
-                
+
                 dist = np.linalg.norm(p - q)
                 if dist < min_dist:
                     k, l = i, j
                     min_dist = dist
-    
+
         merged_point = np.mean([pts[k], pts[l]], axis=0)
         pts = np.delete(pts, [l], axis=0)
         pts[k] = merged_point
 
     return pts.astype(np.int32)
+
 
 def fourCornersSort(pts):
     """Sort corners: top-left, bot-left, bot-right, top-right"""
@@ -48,6 +50,7 @@ def fourCornersSort(pts):
         ]
     )
 
+
 def contourOffset(cnt, offset):
     """Offset contour, by border"""
     # Matrix addition
@@ -57,11 +60,13 @@ def contourOffset(cnt, offset):
     cnt[cnt < 0] = 0
     return cnt
 
+
 def weighted_mean(og_bounds, new_bounds, weight, default=[]):
     pts = np.array(default)
     for i in range(4):
         pts[i] = (og_bounds[i] * weight + new_bounds[i]) / (weight + 1)
     return pts
+
 
 def apply_overlay(img, points, alpha=0.5, color=(0, 255, 0)):
     mask = np.zeros(img.shape, np.uint8)

@@ -30,6 +30,7 @@ def simulate_on_move(x, y):
 
 MANUAL_DEF_INDEX = 0
 
+
 def make_on_click(ds: DetectSurfaces):
     def on_webcam_window_click(event, x, y, flags, param):
         global MANUAL_DEF_INDEX
@@ -38,7 +39,9 @@ def make_on_click(ds: DetectSurfaces):
                 ds.surface_confirmations = 100
             ds.surface_camspace[MANUAL_DEF_INDEX] = [x, y]
             MANUAL_DEF_INDEX = (MANUAL_DEF_INDEX + 1) % 4
+
     return on_webcam_window_click
+
 
 ANNOTATED_WEBCAM_WINDOW = "Annotated Webcam"
 KEYBOARD_WINDOW = "Keyboard"
