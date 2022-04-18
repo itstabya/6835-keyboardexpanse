@@ -1,4 +1,5 @@
 import cv2
+from cv2 import BORDER_DEFAULT
 import numpy as np
 import keyboardexpanse.hands.detector as detector
 import time
@@ -49,6 +50,15 @@ def fourCornersSort(pts):
         ]
     )
 
+def contourOffset(cnt, offset):
+    """ Offset contour, by border """
+    # Matrix addition
+    cnt += offset
+    
+    # if value < 0 => replace it by 0
+    cnt[cnt < 0] = 0
+    return cnt
+
 
 def weighted_mean(og_bounds, new_bounds, weight):
     pts = np.array(DEFAULT_KEYBOARD_CONTOUR)
@@ -71,6 +81,7 @@ def detect_laptop_surface(img):
     if keyboardWeight > 10:
         return img
 
+
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Apply some helpful colour masks
@@ -80,6 +91,10 @@ def detect_laptop_surface(img):
     boundaries = [
         # MacGregor desks :P
         ([0, 92, 39], [178, 216, 255]),
+        # Hands
+        ([0, 30, 78], [179, 112, 225]),
+        # Wire
+        ([0, 18, 50], [178, 60, 79])
     ]
 
     # loop over the boundaries
@@ -102,17 +117,32 @@ def detect_laptop_surface(img):
     h, s, v = cv2.split(hsv)
 
     # Binary image from adaptive thresholds
-    v = cv2.adaptiveThreshold(
+    bin_v = cv2.adaptiveThreshold(
         v, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 4
     )
 
+    
     # Median filter to clear small details
-    v = cv2.medianBlur(v, 11)
+    bin_v = cv2.medianBlur(bin_v, 11)
 
     # Add a black border to allow laptop to touch edge of screen
-    v = cv2.copyMakeBorder(v, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    BORDER_SIZE = 20
+    bin_v = cv2.copyMakeBorder(
+        bin_v,
+        BORDER_SIZE,
+        BORDER_SIZE,
+        BORDER_SIZE,
+        BORDER_SIZE,
+        cv2.BORDER_CONSTANT,
+        value=0,
+    )
 
-    edges = cv2.Canny(v, 200, 250)
+    # # morphological closing
+    # kernel = np.ones((3, 3), np.uint8)
+    # v = cv2.morphologyEx(v, cv2.MORPH_CLOSE, kernel, iterations=10)
+
+
+    edges = cv2.Canny(bin_v, 200, 250)
 
     # Contours
     contours, hierarchy = cv2.findContours(
@@ -121,7 +151,7 @@ def detect_laptop_surface(img):
 
     height, width = edges.shape
     MIN_CONTOUR_AREA = width * height * 0.5
-    MAX_CONTOUR_AREA = (width - 10) * (height - 10)
+    MAX_CONTOUR_AREA = (width - BORDER_SIZE) * (height - BORDER_SIZE)
 
     # Keyboard should fill at least half the image
     maxAreaFound = MIN_CONTOUR_AREA
@@ -129,10 +159,11 @@ def detect_laptop_surface(img):
     if keyboardContour is None:
         keyboardContour = DEFAULT_KEYBOARD_CONTOUR
 
+    simplified = [keyboardContour]
     for cnt in contours:
         perimeter = cv2.arcLength(cnt, True)
         ALLOWED_ERROR = 0.03
-        approx = cv2.approxPolyDP(cnt, perimeter * ALLOWED_ERROR, True)
+        approx = cv2.convexHull(cv2.approxPolyDP(cnt, perimeter * ALLOWED_ERROR, True))
 
         # Check we have a 4 point approximation
         # Total area > 1000
@@ -145,38 +176,73 @@ def detect_laptop_surface(img):
         isConvex = cv2.isContourConvex(approx)
         if isLarge and isQuad and isConvex:
             maxAreaFound = area
-            newContour = fourCornersSort(approx[:, 0])
+            newContour = contourOffset(fourCornersSort(approx[:, 0]), (-BORDER_SIZE, -BORDER_SIZE))
             print(f"Adjusting Keyboard {keyboardWeight}", newContour)
             keyboardContour = weighted_mean(keyboardContour, newContour, keyboardWeight)
             keyboardWeight += 1
 
+        if isLarge:
+            simplified.append(contourOffset(approx, (-BORDER_SIZE, -BORDER_SIZE)))
+
     # img = v
-    cv2.drawContours(img, [keyboardContour], -1, (0, 255, 0), 3)
+    cv2.drawContours(img, simplified, -1, (0, 255, 0), 3)
     return img
 
 
 def perspective_transform(img, s_points):
     # Transform start points to target points
     # Euclidean distance - calculate maximum height and width
-    height = max(
-        np.linalg.norm(s_points[0] - s_points[1]),
-        np.linalg.norm(s_points[2] - s_points[3]),
-    )
-    width = max(
-        np.linalg.norm(s_points[1] - s_points[2]),
-        np.linalg.norm(s_points[3] - s_points[0]),
-    )
+    # height = max(
+    #     np.linalg.norm(s_points[0] - s_points[1]),
+    #     np.linalg.norm(s_points[2] - s_points[3]),
+    # )
+    # width = max(
+    #     np.linalg.norm(s_points[1] - s_points[2]),
+    #     np.linalg.norm(s_points[3] - s_points[0]),
+    # )
 
     # Create target points
-    t_points = np.array([[0, 0], [0, height], [width, height], [width, 0]], np.float32)
+    # t_points = np.array([[0, 0], [0, height], [width, height], [width, 0]], np.float32)
 
+    t_points = KEYBOARD_SCALE
+    
     # getPerspectiveTransform() needs float32
     if s_points.dtype != np.float32:
         s_points = s_points.astype(np.float32)
 
     M = cv2.getPerspectiveTransform(s_points, t_points)
-    return cv2.warpPerspective(img, M, (int(width), int(height)))
+    return cv2.warpPerspective(img, M, (1000, 500))
 
+
+KEYBOARD_SCALE = np.array([[0, 0], [0, 500], [1000, 500], [1000, 0]], np.float32)
+
+def perspectiveTransform(point, s_points, t_points = KEYBOARD_SCALE):
+
+    # getPerspectiveTransform() needs float32
+    if s_points.dtype != np.float32:
+        s_points = s_points.astype(np.float32)
+    if t_points.dtype != np.float32:
+        t_points = t_points.astype(np.float32)
+
+    point = np.append(point.astype(np.float32), 1)
+    M = cv2.getPerspectiveTransform(s_points, t_points)
+    
+    return np.dot(M, point)[:2].astype(np.int16)
+
+MANUAL_DEF_INDEX = 0
+
+def on_webcam_window_click(event, x, y, flags, param):
+    global MANUAL_DEF_INDEX
+    global keyboardContour
+    if event == cv2.EVENT_LBUTTONDOWN:
+        keyboardContour[MANUAL_DEF_INDEX] = [x, y]
+        MANUAL_DEF_INDEX = (MANUAL_DEF_INDEX + 1) % 4
+
+
+ANNOTATED_WEBCAM_WINDOW = "Annotated Webcam"
+KEYBOARD_WINDOW = "Keyboard"
+
+ref_point = np.array([500, 1000])
 
 def main():
     """Launch Keyboard Expanse."""
@@ -198,6 +264,18 @@ def main():
     handAnalyser.detect_monitors()
     handAnalyser.register_hooks(on_move=simulate_on_move)
 
+    cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
+    cv2.setMouseCallback(ANNOTATED_WEBCAM_WINDOW, on_webcam_window_click)
+
+    def set_reference_point(event, x, y, _, _x):
+        global ref_point
+        if event == cv2.EVENT_LBUTTONDOWN:
+            print("Setting reference point", x, y)
+            ref_point = np.array([x, 500 - y])
+
+    cv2.namedWindow(KEYBOARD_WINDOW)
+    cv2.setMouseCallback(KEYBOARD_WINDOW, set_reference_point)
+
     try:
         while True:
             # 1. Find hand Landmarks
@@ -211,6 +289,9 @@ def main():
 
             img = detect_laptop_surface(img)
 
+            test_dot = perspectiveTransform(ref_point, KEYBOARD_SCALE, keyboardContour)
+            print(ref_point, test_dot)
+            cv2.circle(img, (test_dot[0], test_dot[1]), 10, (255, 0, 255), cv2.FILLED)
             # img = handAnalyser.step(img)
 
             # 11. Frame Rate
@@ -228,8 +309,8 @@ def main():
             keyboard_view = cv2.flip(perspective_transform(img, keyboardContour), 0)
 
             # 12. Display
-            cv2.imshow("Annotated WebCam", img)
-            cv2.imshow("Keyboard", keyboard_view)
+            cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
+            cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.waitKey(1)
 
     except KeyboardInterrupt:

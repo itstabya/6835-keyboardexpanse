@@ -57,19 +57,19 @@ class HandAnalysis:
             # 4. Only Index Finger : Moving Mode
             if fingers == [0, 1, 0, 0, 0]:
                 # 5. Convert Coordinates to pixels
-                x3 = int(np.interp(indexX, (0, 1), (0, wScr)))
-                y3 = int(np.interp(indexY, (0, 1), (0, hScr)))
+                x3 = int(np.interp(indexX, (0, 1), (0, self.wScr)))
+                y3 = int(np.interp(indexY, (0, 1), (0, self.hScr)))
                 # x3 = int(np.interp(indexX*wScr, (frameR, wCam - frameR), (0, wScr)))
                 # y3 = int(np.interp(indexY*hScr, (frameR, hCam - frameR), (0, hScr)))
                 # 6. Smoothen Values
-                clocX = plocX + (x3 - plocX) / smoothening
-                clocY = plocY + (y3 - plocY) / smoothening
+                clocX = self.plocX + (x3 - self.plocX) / self.smoothening
+                clocY = self.plocY + (y3 - self.plocY) / self.smoothening
 
                 # 7. Move Mouse
-                if abs(clocX - plocX) > 10 or abs(clocY - plocY) > 10:
+                if abs(clocX - self.plocX) > 10 or abs(clocY - self.plocY) > 10:
                     self.on_move(self.wScr - clocX, clocY)
                 cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
-                plocX, plocY = clocX, clocY
+                self.plocX, self.plocY = clocX, clocY
 
             # 8. Both Index and middle fingers are up : Clicking Mode
             if fingers == [0, 1, 1, 0, 0]:
@@ -92,7 +92,7 @@ class HandAnalysis:
                 thumbOut = fingers[0]
                 if thumbOut and prevThumb != thumbOut:
                     print("Sending Alt Tab")
-                    r.send_key_combination("super_l(Tab)")
+                    self.r.send_key_combination("super_l(Tab)")
 
             prevThumb = fingers[0]
 
