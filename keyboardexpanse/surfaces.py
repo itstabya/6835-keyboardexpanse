@@ -41,6 +41,8 @@ class DetectSurfaces:
         # ([0, 30, 78], [179, 112, 225]),
         # Wire
         ([0, 18, 50], [178, 60, 79]),
+        # Light Wood
+        ([2, 16, 174], [19, 158, 201])
     ]
 
     surfacespace_dimensions: np.array = KEYBOARD_SCALE
@@ -144,31 +146,32 @@ class DetectSurfaces:
             # Total area > 1000
             # Convex contor
             area = cv2.contourArea(approx)
-            # isQuad = len(quadApprox) == 4
+            isAlmostQuad = 4 <= len(approx) < 6
             isLarge = maxAreaFound < area < MAX_CONTOUR_AREA
+            
             # isConvex = cv2.isContourConvex(quadApprox)
-            if isLarge:
+            if isAlmostQuad and isLarge:
                 maxAreaFound = area
                 normApprox = contourOffset(approx, (-BORDER_SIZE, -BORDER_SIZE)).squeeze()
-                quadApprox = condenseToNPoints(normApprox, N=4)
+                # normApprox = condenseToNPoints(normApprox, N=4)
             
-                newContour = fourCornersSort(quadApprox)
+                newContour = fourCornersSort(normApprox)
                 print(f"Adjusting Surface {self.surface_confirmations}", newContour)
                 self.surface_camspace = weighted_mean(self.surface_camspace, newContour, self.surface_confirmations, default=DEFAULT_KEYBOARD_SURFACE)
                 self.surface_confirmations += 1
 
             if isLarge:
                 normApprox = contourOffset(approx, (-BORDER_SIZE, -BORDER_SIZE)).squeeze()
-                quadApprox = condenseToNPoints(normApprox, N=4)
+                quadApprox = condenseToNPoints(normApprox, N = 4)
                 
                 simplified.append(normApprox)
                 simplified.append(quadApprox)
 
         # DEBUG SURFACES WITH:
         # img = edges
+        # img = v
         cv2.drawContours(img, simplified, -1, (0, 255, 0), 3)
         for s in simplified:
             for k in s:
-                print(k)
                 cv2.drawMarker(img, k, (255,255,0))
         return img
