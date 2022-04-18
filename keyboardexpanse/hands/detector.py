@@ -22,8 +22,8 @@ class Handness(enum.Enum):
     @property
     def color(self):
         if self.value == "Right":
-            return (0, 0, 255)
-        return (0, 128, 0)
+            return (0, 0, 255)  # Blue
+        return (0, 128, 0)  # Green
 
 
 class Axis(enum.IntEnum):
@@ -227,10 +227,19 @@ class HandDetector:
     def findDistance(self, p1, p2, img, hand=Handness.RightHand, draw=True, r=15, t=3):
         return self.find2HandDistance(hand, p1, hand, p2, img, draw, r, t)
 
-    def find2HandDistance(self, hand1: Handness, landmark1, hand2: Handness, landmark2, img, draw=True, r=15, t=3):
+    def find2HandDistance(
+        self,
+        hand1: Handness,
+        landmark1,
+        hand2: Handness,
+        landmark2,
+        img,
+        draw=True,
+        r=15,
+        t=3,
+    ):
         hand1Landmarks = self.landmarks[hand1.index]
         hand2Landmarks = self.landmarks[hand2.index]
-                
 
         if not hand1Landmarks or not hand2Landmarks:
             return 1, img, []

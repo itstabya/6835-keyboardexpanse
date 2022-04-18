@@ -1,22 +1,24 @@
 import cv2
 import numpy as np
-import htm
+import keyboardexpanse.hands.detector as detector
 import time
+
 # import autopy
 from screeninfo import get_monitors
 
 # import pyautogui
 
-from htm import Handness
+from keyboardexpanse.hands.detector import Handness
+from keyboardexpanse.hands.gesture import HandAnalysis
 from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.relay import Relay
+from keyboardexpanse.surfaces import DetectSurfaces
+from keyboardexpanse.utils import apply_overlay
 
 ##########################
 wCam, hCam = 900, 500
-smoothening = 7
-wScr, hScr = 100, 100 # autopy.screen.size()
-frameR = 100
-FRAME_RATE_DELAY = .02
+FRAME_RATE_DELAY = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
@@ -25,26 +27,72 @@ def simulate_on_move(x, y):
     # autopy.mouse.move(x, y)
     ...
 
+
+MANUAL_DEF_INDEX = 0
+
+
+def make_on_click(ds: DetectSurfaces):
+    def on_webcam_window_click(event, x, y, flags, param):
+        global MANUAL_DEF_INDEX
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if MANUAL_DEF_INDEX == 3:
+                ds.surface_confirmations = 100
+            ds.surface_camspace[MANUAL_DEF_INDEX] = [x, y]
+            MANUAL_DEF_INDEX = (MANUAL_DEF_INDEX + 1) % 4
+
+    return on_webcam_window_click
+
+
+ANNOTATED_WEBCAM_WINDOW = "Annotated Webcam"
+KEYBOARD_WINDOW = "Keyboard"
+
+ref_point = np.array([500, 1000])
+
+# TL, BL, BR, TR
+# Button Mask in Keyboard Space
+keyboard_buttons = np.array([[25, 450], [40, 200], [985, 200], [985, 450]])
+
+# Trackpad Mask in Keyboard Space
+# trackpad = np.array([[310, 310], [310, 480], [690, 480], [690, 310]])
+trackpad = np.array([[310, 190], [310, 10], [690, 10], [690, 190]])
+
+
 def main():
     """Launch Keyboard Expanse."""
 
     r = Relay()
-    r.start()
+    # r.start()
 
     pTime = 0
-    plocX, plocY = 0, 0
-    clocX, clocY = 0, 0
 
     cap = cv2.VideoCapture(0)
     cap.set(3, wCam)
     cap.set(4, hCam)
-    detector = htm.HandDetector(maxHands=2)
+    handDetector = detector.HandDetector(maxHands=2)
+    handAnalyser = HandAnalysis(
+        detector=handDetector,
+        wCam=wCam,
+        hCam=hCam,
+    )
+    handAnalyser.detect_monitors()
+    handAnalyser.register_hooks(on_move=simulate_on_move)
 
-    monitor = get_monitors()[0]
-    wScr, hScr = monitor.width, monitor.height
+    surfaceDetector = DetectSurfaces()
 
-    prevThumb = 0
-    prev_status = ""
+    # Create windows
+    cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
+    cv2.namedWindow(KEYBOARD_WINDOW)
+
+    # Setup Callbacks
+    cv2.setMouseCallback(ANNOTATED_WEBCAM_WINDOW, make_on_click(surfaceDetector))
+
+    # # Useful for translating coordinates from one space to another
+    # def set_reference_point(event, x, y, _, _x):
+    #     global ref_point
+    #     if event == cv2.EVENT_LBUTTONDOWN:
+    #         print("Setting reference point", x, 500 - y)
+    #         ref_point = np.array([x, 500 - y])
+    # cv2.setMouseCallback(KEYBOARD_WINDOW, set_reference_point)
 
     try:
         while True:
@@ -52,91 +100,20 @@ def main():
             _, img = cap.read()
             # mirror image for convenience
             img = cv2.flip(img, 2)
-            detector.process(img)
 
-            upness = [[0] * 5, [0] * 5]
-            # 3. For each hand
-            for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
-                handLandmarks = detector.landmarks[handness.index]
+            # Flip if mirrored down
+            if IS_MIRRORED_DOWN:
+                img = cv2.flip(img, 0)
 
-                if not handLandmarks:
-                    continue
+            img = surfaceDetector.detect(img)
 
-                fingers = detector.fingersUp(hand=handness, upAxis=htm.Axis.Y)
-                upness[handness.index] = fingers
-                imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
-                cv2.rectangle(
-                    img,
-                    (frameR, frameR),
-                    (wCam - frameR, hCam - frameR),
-                    (255, 0, 255),
-                    2,
-                )
-                for finger, isUp in enumerate(fingers):
-                    if isUp:
-                        x, y = imageLandmarks[htm.TIPS[finger]]
-                        cv2.circle(img, (x, y), 10, (0, 0, 0), cv2.FILLED)
+            # Find regions
+            keyboard_buttons_camspace = surfaceDetector.to_cam_space(keyboard_buttons)
+            trackpad_camspace = surfaceDetector.to_cam_space(trackpad)
+            # img = apply_overlay(img, keyboard_buttons_camspace)
+            # img = apply_overlay(img, trackpad_camspace, color=(255, 0, 0))
 
-                indexX, indexY, _ = handLandmarks[HandLandmark.INDEX_FINGER_TIP]
-                # middleX, middleY, _ = handLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
-
-                # 4. Only Index Finger : Moving Mode
-                if fingers == [0, 1, 0, 0, 0]:
-                    # 5. Convert Coordinates to pixels
-                    x3 = int(np.interp(indexX, (0, 1), (0, wScr)))
-                    y3 = int(np.interp(indexY, (0, 1), (0, hScr)))
-                    # x3 = int(np.interp(indexX*wScr, (frameR, wCam - frameR), (0, wScr)))
-                    # y3 = int(np.interp(indexY*hScr, (frameR, hCam - frameR), (0, hScr)))
-                    # 6. Smoothen Values
-                    clocX = plocX + (x3 - plocX) / smoothening
-                    clocY = plocY + (y3 - plocY) / smoothening
-
-                    # 7. Move Mouse
-                    if abs(clocX - plocX) > 10 or abs(clocY - plocY) > 10:
-                        simulate_on_move(wScr - clocX, clocY)
-                    cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
-                    plocX, plocY = clocX, clocY
-
-                # 8. Both Index and middle fingers are up : Clicking Mode
-                if fingers == [0, 1, 1, 0, 0]:
-                    # 9. Find distance between fingers
-                    length, img, lineInfo = detector.findDistance(
-                        HandLandmark.INDEX_FINGER_TIP,
-                        HandLandmark.MIDDLE_FINGER_TIP,
-                        img,
-                    )
-                    # print(length)
-                    # 10. Click mouse if distance short
-                    if length < 0.07:
-                        cv2.circle(
-                            img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
-                        )
-                        # autopy.mouse.click()
-
-                # Three finger motion
-                if fingers[1:] == [1, 0, 0, 1]:
-                    thumbOut = fingers[0]
-                    if thumbOut and prevThumb != thumbOut:
-                        print("Sending Alt Tab")
-                        r.send_key_combination("super_l(Tab)")
-
-                prevThumb = fingers[0]
-
-            # 2 Hand Gestures
-            if True or (upness[0][1] and upness[1][1]):
-                length, img, lineInfo = detector.find2HandDistance(
-                    hand1=Handness.LeftHand,
-                    landmark1=HandLandmark.INDEX_FINGER_TIP,
-                    hand2=Handness.RightHand,
-                    landmark2=HandLandmark.INDEX_FINGER_TIP,
-                    img=img
-                )
-                # print(length)
-                # 10. Click mouse if distance short
-                if length < 0.1:
-                    cv2.circle(
-                        img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
-                    )
+            img = handAnalyser.step(img)
 
             # 11. Frame Rate
             cTime = time.time()
@@ -149,8 +126,12 @@ def main():
             cv2.putText(
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
+
+            keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
+
             # 12. Display
-            cv2.imshow("Image", img)
+            cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
+            cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.waitKey(1)
 
     except KeyboardInterrupt:
