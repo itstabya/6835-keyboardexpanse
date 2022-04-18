@@ -11,11 +11,12 @@ QWERTY_RSWIPE = "o+i+u"
 QWERTY_LSWIPE_KEY = "control(alt(right))"
 QWERTY_RSWIPE_KEY = "control(alt(left))"
 
+
 @dataclass
 class Window:
     values = []
     recent_index = 0
-    length_nanoseconds = 5e8 # 1s = 1e9ns
+    length_nanoseconds = 5e8  # 1s = 1e9ns
 
     def insert(self, time, item):
 
@@ -85,7 +86,7 @@ class Relay:
         elif key in self.pressed:
             self.pressed.remove(key)
 
-        new_status = f'pressed: {self.recent.characters()}'
+        new_status = f"pressed: {self.recent.characters()}"
         if self._status != new_status:
             print(self._status)
             self._status = new_status

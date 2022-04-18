@@ -1,22 +1,22 @@
 import cv2
 import numpy as np
-import htm
+import keyboardexpanse.hands.detector as detector
 import time
+
 # import autopy
 from screeninfo import get_monitors
 
 # import pyautogui
 
-from htm import Handness
+from keyboardexpanse.hands.detector import Handness
+from keyboardexpanse.hands.gesture import HandAnalysis
 from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.relay import Relay
 
 ##########################
 wCam, hCam = 900, 500
-smoothening = 7
-wScr, hScr = 100, 100 # autopy.screen.size()
-frameR = 100
-FRAME_RATE_DELAY = .02
+FRAME_RATE_DELAY = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
@@ -25,26 +25,26 @@ def simulate_on_move(x, y):
     # autopy.mouse.move(x, y)
     ...
 
+
 def main():
     """Launch Keyboard Expanse."""
 
     r = Relay()
-    r.start()
+    # r.start()
 
     pTime = 0
-    plocX, plocY = 0, 0
-    clocX, clocY = 0, 0
 
     cap = cv2.VideoCapture(0)
     cap.set(3, wCam)
     cap.set(4, hCam)
-    detector = htm.HandDetector(maxHands=2)
-
-    monitor = get_monitors()[0]
-    wScr, hScr = monitor.width, monitor.height
-
-    prevThumb = 0
-    prev_status = ""
+    handDetector = detector.HandDetector(maxHands=2)
+    handAnalyser = HandAnalysis(
+        detector=handDetector,
+        wCam=wCam,
+        hCam=hCam,
+    )
+    handAnalyser.detect_monitors()
+    handAnalyser.register_hooks(on_move=simulate_on_move)
 
     try:
         while True:
@@ -52,91 +52,75 @@ def main():
             _, img = cap.read()
             # mirror image for convenience
             img = cv2.flip(img, 2)
-            detector.process(img)
 
-            upness = [[0] * 5, [0] * 5]
-            # 3. For each hand
-            for handness in (htm.Handness.LeftHand, htm.Handness.RightHand):
-                handLandmarks = detector.landmarks[handness.index]
+            # Flip if mirrored down
+            if IS_MIRRORED_DOWN:
+                img = cv2.flip(img, 0)
 
-                if not handLandmarks:
-                    continue
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-                fingers = detector.fingersUp(hand=handness, upAxis=htm.Axis.Y)
-                upness[handness.index] = fingers
-                imageLandmarks, _ = detector.findImagePosition(img, hand=handness)
-                cv2.rectangle(
-                    img,
-                    (frameR, frameR),
-                    (wCam - frameR, hCam - frameR),
-                    (255, 0, 255),
-                    2,
-                )
-                for finger, isUp in enumerate(fingers):
-                    if isUp:
-                        x, y = imageLandmarks[htm.TIPS[finger]]
-                        cv2.circle(img, (x, y), 10, (0, 0, 0), cv2.FILLED)
+            accumMask = np.zeros(hsv.shape[:2], dtype="uint8")
 
-                indexX, indexY, _ = handLandmarks[HandLandmark.INDEX_FINGER_TIP]
-                # middleX, middleY, _ = handLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
+            # define the list of color boundaries
+            boundaries = [
+                # MacGregor desks :P
+                ([0, 92, 39], [178, 216, 255]),
+                # # Gray Cables
+                # ([13, 40, 15], [91, 141, 72])
+            ]
 
-                # 4. Only Index Finger : Moving Mode
-                if fingers == [0, 1, 0, 0, 0]:
-                    # 5. Convert Coordinates to pixels
-                    x3 = int(np.interp(indexX, (0, 1), (0, wScr)))
-                    y3 = int(np.interp(indexY, (0, 1), (0, hScr)))
-                    # x3 = int(np.interp(indexX*wScr, (frameR, wCam - frameR), (0, wScr)))
-                    # y3 = int(np.interp(indexY*hScr, (frameR, hCam - frameR), (0, hScr)))
-                    # 6. Smoothen Values
-                    clocX = plocX + (x3 - plocX) / smoothening
-                    clocY = plocY + (y3 - plocY) / smoothening
+            # loop over the boundaries
+            for (lower, upper) in boundaries:
+                # create NumPy arrays from the boundaries
+                lower = np.array(lower, dtype="uint8")
+                upper = np.array(upper, dtype="uint8")
 
-                    # 7. Move Mouse
-                    if abs(clocX - plocX) > 10 or abs(clocY - plocY) > 10:
-                        simulate_on_move(wScr - clocX, clocY)
-                    cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
-                    plocX, plocY = clocX, clocY
+                # find the colors within the specified boundaries
+                mask = cv2.inRange(hsv, lower, upper)
 
-                # 8. Both Index and middle fingers are up : Clicking Mode
-                if fingers == [0, 1, 1, 0, 0]:
-                    # 9. Find distance between fingers
-                    length, img, lineInfo = detector.findDistance(
-                        HandLandmark.INDEX_FINGER_TIP,
-                        HandLandmark.MIDDLE_FINGER_TIP,
-                        img,
-                    )
-                    # print(length)
-                    # 10. Click mouse if distance short
-                    if length < 0.07:
-                        cv2.circle(
-                            img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
-                        )
-                        # autopy.mouse.click()
+                # merge the mask into the accumulated masks
+                accumMask = cv2.bitwise_or(accumMask, mask)
 
-                # Three finger motion
-                if fingers[1:] == [1, 0, 0, 1]:
-                    thumbOut = fingers[0]
-                    if thumbOut and prevThumb != thumbOut:
-                        print("Sending Alt Tab")
-                        r.send_key_combination("super_l(Tab)")
+            accumMask = cv2.bitwise_not(accumMask)
 
-                prevThumb = fingers[0]
+            hsv = cv2.bitwise_and(hsv, hsv, mask=accumMask)
 
-            # 2 Hand Gestures
-            if True or (upness[0][1] and upness[1][1]):
-                length, img, lineInfo = detector.find2HandDistance(
-                    hand1=Handness.LeftHand,
-                    landmark1=HandLandmark.INDEX_FINGER_TIP,
-                    hand2=Handness.RightHand,
-                    landmark2=HandLandmark.INDEX_FINGER_TIP,
-                    img=img
-                )
-                # print(length)
-                # 10. Click mouse if distance short
-                if length < 0.1:
-                    cv2.circle(
-                        img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
-                    )
+            hsv = cv2.medianBlur(hsv, 3)
+            h, s, v = cv2.split(hsv)
+            v = cv2.adaptiveThreshold(v, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv2.THRESH_BINARY,11,2)
+            contours = cv2.findContours(v, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+            cnts = contours[0] if len(contours) == 2 else contours[1]
+            # Sort larges countours
+            cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+            
+            recs = []
+            
+            for cnt in cnts[0:5]:
+                ALLOWED_ERROR = 0.01
+
+                approx = cv2.approxPolyDP(cnt, cv2.arcLength(cnt, True) * ALLOWED_ERROR, True)
+
+                # Check we have a 4 point approximation
+                # Total area > 1000
+                # Convex contor
+                # maxCosine < .3 for all four points
+
+                area = cv2.contourArea(approx)
+                isQuad = len(approx) == 4
+                isLarge = area > 200_000
+                isConvex = cv2.isContourConvex(approx)
+                if isLarge:
+                    recs.append(cnt)
+                    # print(area)
+
+            # img = v
+            cv2.drawContours(img, recs, -1, (0, 255, 0), 3)
+
+
+            
+            # img = handAnalyser.step(img)
 
             # 11. Frame Rate
             cTime = time.time()
@@ -149,6 +133,7 @@ def main():
             cv2.putText(
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
+
             # 12. Display
             cv2.imshow("Image", img)
             cv2.waitKey(1)

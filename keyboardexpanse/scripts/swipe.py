@@ -1,6 +1,5 @@
 import time
 from keyboardexpanse.relay import Relay
-from pynput import keyboard
 
 
 def main():
