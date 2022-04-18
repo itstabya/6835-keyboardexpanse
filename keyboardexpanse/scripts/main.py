@@ -50,11 +50,12 @@ def fourCornersSort(pts):
         ]
     )
 
+
 def contourOffset(cnt, offset):
-    """ Offset contour, by border """
+    """Offset contour, by border"""
     # Matrix addition
     cnt += offset
-    
+
     # if value < 0 => replace it by 0
     cnt[cnt < 0] = 0
     return cnt
@@ -81,7 +82,6 @@ def detect_laptop_surface(img):
     if keyboardWeight > 10:
         return img
 
-
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Apply some helpful colour masks
@@ -94,7 +94,7 @@ def detect_laptop_surface(img):
         # Hands
         ([0, 30, 78], [179, 112, 225]),
         # Wire
-        ([0, 18, 50], [178, 60, 79])
+        ([0, 18, 50], [178, 60, 79]),
     ]
 
     # loop over the boundaries
@@ -121,7 +121,6 @@ def detect_laptop_surface(img):
         v, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 4
     )
 
-    
     # Median filter to clear small details
     bin_v = cv2.medianBlur(bin_v, 11)
 
@@ -140,7 +139,6 @@ def detect_laptop_surface(img):
     # # morphological closing
     # kernel = np.ones((3, 3), np.uint8)
     # v = cv2.morphologyEx(v, cv2.MORPH_CLOSE, kernel, iterations=10)
-
 
     edges = cv2.Canny(bin_v, 200, 250)
 
@@ -176,7 +174,9 @@ def detect_laptop_surface(img):
         isConvex = cv2.isContourConvex(approx)
         if isLarge and isQuad and isConvex:
             maxAreaFound = area
-            newContour = contourOffset(fourCornersSort(approx[:, 0]), (-BORDER_SIZE, -BORDER_SIZE))
+            newContour = contourOffset(
+                fourCornersSort(approx[:, 0]), (-BORDER_SIZE, -BORDER_SIZE)
+            )
             print(f"Adjusting Keyboard {keyboardWeight}", newContour)
             keyboardContour = weighted_mean(keyboardContour, newContour, keyboardWeight)
             keyboardWeight += 1
@@ -205,7 +205,7 @@ def perspective_transform(img, s_points):
     # t_points = np.array([[0, 0], [0, height], [width, height], [width, 0]], np.float32)
 
     t_points = KEYBOARD_SCALE
-    
+
     # getPerspectiveTransform() needs float32
     if s_points.dtype != np.float32:
         s_points = s_points.astype(np.float32)
@@ -216,7 +216,8 @@ def perspective_transform(img, s_points):
 
 KEYBOARD_SCALE = np.array([[0, 0], [0, 500], [1000, 500], [1000, 0]], np.float32)
 
-def perspectiveTransform(point, s_points, t_points = KEYBOARD_SCALE):
+
+def perspectiveTransform(point, s_points, t_points=KEYBOARD_SCALE):
 
     # getPerspectiveTransform() needs float32
     if s_points.dtype != np.float32:
@@ -226,10 +227,12 @@ def perspectiveTransform(point, s_points, t_points = KEYBOARD_SCALE):
 
     point = np.append(point.astype(np.float32), 1)
     M = cv2.getPerspectiveTransform(s_points, t_points)
-    
+
     return np.dot(M, point)[:2].astype(np.int16)
 
+
 MANUAL_DEF_INDEX = 0
+
 
 def on_webcam_window_click(event, x, y, flags, param):
     global MANUAL_DEF_INDEX
@@ -243,6 +246,7 @@ ANNOTATED_WEBCAM_WINDOW = "Annotated Webcam"
 KEYBOARD_WINDOW = "Keyboard"
 
 ref_point = np.array([500, 1000])
+
 
 def main():
     """Launch Keyboard Expanse."""
