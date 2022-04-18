@@ -108,13 +108,13 @@ class Relay:
 
         # TODO(DJRHails): Relaying like this dramatically slows down
 
-        # # Relay key combinations
-        # if (
-        #     not self.supress
-        #     and "pressed" == action
-        #     and key in KeyboardCapture.SUPPORTED_KEYS
-        # ):
-        #     try:
-        #         self._ke.send_key_combination(CHAR_TO_KEYNAME.get(key, key))
-        #     except Exception as err:
-        #         print(f"[ERROR] {err}")
+        # Relay key combinations
+        if (
+            not self.supress
+            and "pressed" == action
+            and key in KeyboardCapture.SUPPORTED_KEYS
+        ):
+            try:
+                self._ke.send_key_combination(CHAR_TO_KEYNAME.get(key, key))
+            except Exception as err:
+                print(f"[ERROR] {err}")

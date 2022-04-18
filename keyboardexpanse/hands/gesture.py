@@ -13,6 +13,7 @@ class HandAnalysis:
     detector: HandDetector
     wCam: int
     hCam: int
+    onKeyboard = True
     wScr = 100
     hScr = 100
     frameR = 100
