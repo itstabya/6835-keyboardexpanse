@@ -80,9 +80,9 @@ def main():
     surfaceDetector = DetectSurfaces()
 
     # Create windows
-    cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
     cv2.namedWindow(KEYBOARD_WINDOW)
-
+    cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
+    
     # Setup Callbacks
     cv2.setMouseCallback(ANNOTATED_WEBCAM_WINDOW, make_on_click(surfaceDetector))
 
@@ -130,8 +130,8 @@ def main():
             keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
             # 12. Display
+            # cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
-            cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.waitKey(1)
 
     except KeyboardInterrupt:
