@@ -42,10 +42,22 @@ TIPS = [
 
 BASES = [
     HandLandmark.THUMB_IP,
-    HandLandmark.INDEX_FINGER_PIP,
-    HandLandmark.MIDDLE_FINGER_PIP,
-    HandLandmark.RING_FINGER_PIP,
-    HandLandmark.PINKY_PIP,
+    # HandLandmark.INDEX_FINGER_PIP,
+    # HandLandmark.MIDDLE_FINGER_PIP,
+    # HandLandmark.RING_FINGER_PIP,
+    # HandLandmark.PINKY_PIP,
+    HandLandmark.RING_FINGER_TIP,
+    HandLandmark.RING_FINGER_TIP,
+    HandLandmark.MIDDLE_FINGER_TIP,
+    HandLandmark.RING_FINGER_TIP
+]
+
+THRESHOLDS = [
+    0,
+    -0.08,
+    -0.08,
+    -0.08,
+    -0.15,
 ]
 
 
@@ -70,7 +82,7 @@ class HandDetector:
         )
         self.mpDraw = mp.solutions.drawing_utils
 
-        self.referenceIds = list(zip(TIPS, BASES))
+        self.referenceIds = list(zip(TIPS, BASES, THRESHOLDS))
 
     def process(self, img, draw=True):
 
@@ -192,7 +204,7 @@ class HandDetector:
         if handLandmarks:
             # Thumb is 'special'
 
-            tipIndex, baseIndex = self.referenceIds[0]
+            tipIndex, baseIndex, _ = self.referenceIds[0]
             isTipHigherThanBase = (
                 handLandmarks[tipIndex][Axis.X] < handLandmarks[baseIndex][Axis.X]
             )
@@ -213,18 +225,26 @@ class HandDetector:
 
             fingers.append(isTipHigherThanBase)
 
-            for tipIndex, baseIndex in self.referenceIds[1:]:
-                isTipHigherThanBase = (
-                    handLandmarks[tipIndex][upAxis] < handLandmarks[baseIndex][upAxis]
-                )
-                fingers.append(isTipHigherThanBase)
+            for tipIndex, baseIndex, threshold in self.referenceIds[1:]:
+                p = handLandmarks[tipIndex][upAxis]
+                q = handLandmarks[baseIndex][upAxis]
+                dist = p - q
+                # isTipHigherThanBase = (
+                #     handLandmarks[tipIndex][upAxis] - handLandmarks[baseIndex][upAxis] > .02
+                # )
+                # print(isTipHigherThanBase, handLandmarks[tipIndex][upAxis] - handLandmarks[baseIndex][upAxis])
+                fingers.append(dist < threshold)
+
+                # dist, _, _ = self.findDistance(tipIndex, baseIndex, hand=hand)
+                # print(dist)
+                # fingers.append(dist > 0.05)
 
             # totalFingers = fingers.count(1)
         else:
             return [0, 0, 0, 0, 0]
         return fingers
 
-    def findDistance(self, p1, p2, img, hand=Handness.RightHand, draw=True, r=15, t=3):
+    def findDistance(self, p1, p2, img=None, hand=Handness.RightHand, draw=True, r=15, t=3):
         return self.find2HandDistance(hand, p1, hand, p2, img, draw, r, t)
 
     def find2HandDistance(
@@ -234,7 +254,7 @@ class HandDetector:
         hand2: Handness,
         landmark2,
         img,
-        draw=True,
+        draw=False,
         r=15,
         t=3,
     ):
@@ -244,18 +264,24 @@ class HandDetector:
         if not hand1Landmarks or not hand2Landmarks:
             return 1, img, []
 
-        h, w, _ = img.shape
+
         x1, y1, _ = hand1Landmarks[landmark1]
         x2, y2, _ = hand2Landmarks[landmark2]
+        length = math.hypot(x2 - x1, y2 - y1)
+        # length = y2 - y1
 
-        if draw:
+        lineinfo = []
+        if img is not None:
+            h, w, _ = img.shape
             cx1, cy1 = int(w * x1), int(h * y1)
             cx2, cy2 = int(w * x2), int(h * y2)
             cx, cy = (cx1 + cx2) // 2, (cy1 + cy2) // 2
+            lineinfo = [cx1, cy1, cx2, cy2, cx, cy]
+
+        if draw and img is not None:
             cv2.line(img, (cx1, cy1), (cx2, cy2), (255, 0, 255), t)
             cv2.circle(img, (cx1, cy1), r, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, (cx2, cy2), r, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, (cx, cy), r, (0, 0, 255), cv2.FILLED)
-        length = math.hypot(x2 - x1, y2 - y1)
-
-        return length, img, [cx1, cy1, cx2, cy2, cx, cy]
+        
+        return length, img, lineinfo

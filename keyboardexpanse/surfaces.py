@@ -77,7 +77,7 @@ class DetectSurfaces:
     def detect(self, img):
         # If the keyboard is stable, don't bother performing
         # detection
-        if self.surface_confirmations > 50:
+        if self.surface_confirmations > 10:
             return img
 
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)

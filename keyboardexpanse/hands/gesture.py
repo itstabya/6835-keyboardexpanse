@@ -22,6 +22,7 @@ class HandAnalysis:
     frameR = 100
     smoothening = 7
     plocX, plocY = 0, 0
+    prevThumb = 0
 
     def detect_monitors(self):
         monitor = get_monitors()[0]
@@ -95,11 +96,27 @@ class HandAnalysis:
             # Three finger motion
             if fingers[1:] == [1, 0, 0, 1]:
                 thumbOut = fingers[0]
-                if thumbOut and prevThumb != thumbOut:
+                if thumbOut and self.prevThumb != thumbOut:
                     print("Sending Alt Tab")
                     self.relay.send_key_combination("super_l(Tab)")
+                    # self.r.send_key_combination("super_l(Tab)")
 
-            prevThumb = fingers[0]
+            self.prevThumb = fingers[0]
+
+        # Measure distance
+        # length, img, lineInfo = self.detector.find2HandDistance(
+        #     Handness.LeftHand,
+        #     HandLandmark.INDEX_FINGER_TIP,
+        #     Handness.LeftHand,
+        #     HandLandmark.RING_FINGER_TIP,
+        #     img,
+        #     draw=True
+        # )
+
+        # if lineInfo and length > 0.2:
+        #     # print(lineInfo)
+        #     cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
+
 
         # if upness thumbs and eveerything else is closed
         ONLY_THUMBS = [1, 0, 0, 0, 0]
