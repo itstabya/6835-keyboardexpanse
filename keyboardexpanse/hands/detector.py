@@ -40,12 +40,16 @@ TIPS = [
     HandLandmark.PINKY_TIP,
 ]
 
+BASE_FOR_FIST = [
+    HandLandmark.THUMB_IP,
+    HandLandmark.INDEX_FINGER_PIP,
+    HandLandmark.MIDDLE_FINGER_PIP,
+    HandLandmark.RING_FINGER_PIP,
+    HandLandmark.PINKY_PIP,
+]
+
 BASES = [
     HandLandmark.THUMB_IP,
-    # HandLandmark.INDEX_FINGER_PIP,
-    # HandLandmark.MIDDLE_FINGER_PIP,
-    # HandLandmark.RING_FINGER_PIP,
-    # HandLandmark.PINKY_PIP,
     HandLandmark.RING_FINGER_TIP,
     HandLandmark.RING_FINGER_TIP,
     HandLandmark.MIDDLE_FINGER_TIP,
@@ -83,6 +87,8 @@ class HandDetector:
         self.mpDraw = mp.solutions.drawing_utils
 
         self.referenceIds = list(zip(TIPS, BASES, THRESHOLDS))
+        self.referenceIdsFist = list(zip(TIPS, BASE_FOR_FIST))
+
 
     def process(self, img, draw=True):
 
@@ -175,6 +181,42 @@ class HandDetector:
             if hand == Handness.RightHand
             else not thumbToTheLeftOfWrist
         )
+
+    def fingersClosed(self, hand=Handness.RightHand, upAxis=Axis.Y):
+        fingers = []
+        handLandmarks = self.landmarks[hand.index]
+
+        if handLandmarks:
+            # Thumb is 'special'
+
+            tipIndex, baseIndex = self.referenceIdsFist[0]
+            isTipHigherThanBase = (
+                handLandmarks[tipIndex][Axis.X] < handLandmarks[baseIndex][Axis.X]
+            )
+
+            # Left hand is inverted for the thumb
+            isTipHigherThanBase = (
+                isTipHigherThanBase
+                if hand == Handness.RightHand
+                else not isTipHigherThanBase
+            )
+
+            # # It is also inverted if the palm is not facing the camera
+            isTipHigherThanBase = (
+                isTipHigherThanBase
+                if self.isPalmFacingCamera(hand)
+                else not isTipHigherThanBase
+            )
+
+            fingers.append(isTipHigherThanBase)
+
+            for tipIndex, baseIndex in self.referenceIdsFist[1:]:
+                isTipHigherThanBase = (
+                    handLandmarks[tipIndex][upAxis] > handLandmarks[baseIndex][upAxis]
+                )
+        else:
+            return [0, 0, 0, 0, 0]
+        return fingers
 
     def fingersUp(self, hand=Handness.RightHand, upAxis=Axis.Y):
         # upAxis:
