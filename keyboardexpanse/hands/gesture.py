@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 from screeninfo import get_monitors
 import cv2
-
+import autopy
 
 from keyboardexpanse.relay import Relay
 from keyboardexpanse.hands.landmarks import HandLandmark
@@ -17,11 +17,11 @@ class HandAnalysis:
     hCam: int
     relay: Relay
     onKeyboard = True
-    wScr = 100
-    hScr = 100
+    wScr = autopy.screen.size()[0]
+    hScr = autopy.screen.size()[1]
     frameR = 100
-    smoothening = 7
-    plocX, plocY = 0, 0
+    smoothening = 2
+    plocX, plocY = 0, 0 #previous location X, previous location Y
     prevThumb = 0
 
     def detect_monitors(self):
@@ -31,7 +31,7 @@ class HandAnalysis:
     def register_hooks(self, on_move):
         self.on_move = on_move
 
-    def step(self, img, pTime, cTime):
+    def step(self, img, pTime, cTime, frameCount):
         self.detector.process(img)
         upness = [[0] * 5, [0] * 5]
         openness = [[0] * 5, [0] * 5]
@@ -64,47 +64,50 @@ class HandAnalysis:
             # middleX, middleY, _ = handLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
 
             # 4. Only Index Finger : Moving Mode
-            if fingers == [1, 1, 0, 0, 0]:
+            if fingers == [1, 1, 0, 0, 0] or fingers == [0, 1, 0, 0, 0]:
                 # 5. Convert Coordinates to pixels
-                x3 = int(np.interp(indexX, (0, 1), (0, self.wScr)))
-                y3 = int(np.interp(indexY, (0, 1), (0, self.hScr)))
-                # x3 = int(np.interp(indexX*wScr, (frameR, wCam - frameR), (0, wScr)))
-                # y3 = int(np.interp(indexY*hScr, (frameR, hCam - frameR), (0, hScr)))
+                #x3 = int(np.interp(indexX, (self.frameR, self.wCam - self.frameR), (0, self.wScr)))
+                x3 = np.interp(indexX, (0, 1), (0, self.wScr))
+                y3 = np.interp(indexY, (0, 1), (0, self.hScr))
+                # y3 = int(np.interp(indexY, (self.frameR, self.hCam - self.frameR), (0, self.hScr)))
                 # 6. Smoothen Values
                 clocX = self.plocX + (x3 - self.plocX) / self.smoothening
                 clocY = self.plocY + (y3 - self.plocY) / self.smoothening
-
+                # to flip, do wScr - x3, y3
                 # 7. Move Mouse
-                if abs(clocX - self.plocX) > 10 or abs(clocY - self.plocY) > 10:
-                  self.on_move(clocX, clocY)
-                cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
+                # if abs(clocX - self.plocX) > 10 or abs(clocY - self.plocY) > 10:
+         
+                self.on_move(clocX, clocY)
+                # cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
+                # update your previous values 
                 self.plocX, self.plocY = clocX, clocY
 
             # 8. Both Index and middle fingers are up : Clicking Mode
-            if fingers == [0, 1, 1, 0, 0]:
+            if fingers == [1, 1, 1, 0, 0]:
                 # 9. Find distance between fingers
                 length, img, lineInfo = self.detector.findDistance(
                     HandLandmark.INDEX_FINGER_TIP,
                     HandLandmark.MIDDLE_FINGER_TIP,
                     img,
                 )
-                # print(length)
+                # print(length
                 # 10. Click mouse if distance short
                 if length < 0.07:
                     cv2.circle(
                         img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
                     )
-                    # autopy.mouse.click()
+                    autopy.mouse.click()
+           
 
             # Three finger motion
-            if fingers[1:] == [1, 0, 0, 1]:
-                thumbOut = fingers[0]
+            
+            if extended[1:] == [1, 0, 0, 1]:
+                thumbOut = extended[0]
                 if thumbOut and self.prevThumb != thumbOut:
                     print("Sending Alt Tab")
                     self.relay.send_key_combination("super_l(Tab)")
-                    # self.r.send_key_combination("super_l(Tab)")
 
-            self.prevThumb = fingers[0]
+            self.prevThumb = extended[0]
 
         # Measure distance
         # length, img, lineInfo = self.detector.find2HandDistance(
@@ -123,8 +126,10 @@ class HandAnalysis:
 
         # if upness thumbs and eveerything else is closed
         ONLY_THUMBS = [1, 0, 0, 0, 0]
+        ONLY_INDEX = [0, 1, 0, 0, 0]
+
+        # TODO: need to gauge sensitivity 
         if ((openness[0] == ONLY_THUMBS) and (openness[1] == ONLY_THUMBS)):
-          print("Both hands thumb open ")
           pass
         elif (openness[0] == ONLY_THUMBS):
           print("Sending Right")
@@ -132,6 +137,27 @@ class HandAnalysis:
         elif (openness[1] == ONLY_THUMBS):
           print("Sending Left")
           self.relay.send_key_combination("left")
+        elif (openness[0] == [1, 1, 0, 0, 0] and openness[1] == [1, 1, 0, 0, 0]):
+          print("Selecting All")
+          self.relay.send_key_combination("command(a)")
+        elif (openness[0] == [1, 1, 0, 0, 0]):
+          print("Selecting Right")
+          self.relay.send_key_combination("shift(right)")
+        elif (openness[1] == [1, 1, 0, 0, 0]):
+          print("Selecting Left")
+          self.relay.send_key_combination("shift(left)")
+        
+
+        # POINTING UP COMMAND
+        if ((openness[0] == ONLY_INDEX) and (openness[1] == ONLY_INDEX)):
+          print("Both hands index extended")
+          self.relay.send_key_combination("command(l)")
+        # elif (openness[0] == ONLY_INDEX):
+        #   print("Sending Right")
+        #   self.relay.send_key_combination("up")
+        # elif (openness[1] == ONLY_INDEX):
+        #   print("Sending Left")
+        #   self.relay.send_key_combination("down")
 
         # 2 Hand Gestures (two index fingers)
         if (upness[0][1] and upness[1][1]):

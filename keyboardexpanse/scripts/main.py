@@ -64,6 +64,7 @@ def main():
     # r.start()
 
     pTime = 0
+    frameCount = 0
 
     cap = cv2.VideoCapture(1)
     cap.set(3, wCam)
@@ -117,9 +118,11 @@ def main():
 
             # 11. Frame Rate
             cTime = time.time()
-            img = handAnalyser.step(img, pTime, cTime)
+            frameCount += 1
+            img = handAnalyser.step(img, pTime, cTime, frameCount)
 
             fps = 1 / (cTime - pTime)
+            
 
             if (cTime - pTime) < FRAME_RATE_DELAY:
                 time.sleep(FRAME_RATE_DELAY - (cTime - pTime))

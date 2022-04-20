@@ -8,8 +8,8 @@ from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmu
 QWERTY_LSWIPE = "e+r+t"
 QWERTY_RSWIPE = "o+i+u"
 
-QWERTY_LSWIPE_KEY = "control(alt(right))"
-QWERTY_RSWIPE_KEY = "control(alt(left))"
+QWERTY_LSWIPE_KEY = "command(alt(right))"
+QWERTY_RSWIPE_KEY = "command(alt(left))"
 
 
 @dataclass
