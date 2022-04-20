@@ -22,7 +22,7 @@ import signal
 import threading
 import winreg
 
-from keyboardexpanse.key_combo import parse_key_combo
+from keyboardexpanse.keyboard.key_combo import parse_key_combo
 from keyboardexpanse.oslayer.winkeyboardlayout import KeyboardLayout
 from keyboardexpanse import log
 from keyboardexpanse.misc import to_surrogate_pair

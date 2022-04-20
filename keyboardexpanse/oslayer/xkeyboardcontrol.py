@@ -31,7 +31,7 @@ from Xlib import X, XK, display
 from Xlib.ext import xinput, xtest
 from Xlib.ext.ge import GenericEventCode
 
-from keyboardexpanse.key_combo import add_modifiers_aliases, parse_key_combo
+from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
 from keyboardexpanse import log
 
 

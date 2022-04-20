@@ -4,7 +4,7 @@ from screeninfo import get_monitors
 import cv2
 
 
-from keyboardexpanse.relay import Relay
+from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.hands.landmarks import HandLandmark
 
 from .detector import TIPS, HandDetector, Handness, Axis
@@ -15,7 +15,7 @@ class HandAnalysis:
     detector: HandDetector
     wCam: int
     hCam: int
-    relay: Relay
+    relay: Interceptor
     onKeyboard = True
     wScr = 100
     hScr = 100

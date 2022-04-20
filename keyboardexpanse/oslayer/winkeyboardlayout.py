@@ -6,7 +6,7 @@ import codecs
 import ctypes
 import sys
 
-from keyboardexpanse.key_combo import CHAR_TO_KEYNAME, add_modifiers_aliases
+from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME, add_modifiers_aliases
 from keyboardexpanse.oslayer.wmctrl import GetForegroundWindow
 from keyboardexpanse.misc import popcount_8
 

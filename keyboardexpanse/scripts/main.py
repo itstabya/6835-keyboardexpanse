@@ -11,21 +11,23 @@ from screeninfo import get_monitors
 from keyboardexpanse.hands.detector import Handness
 from keyboardexpanse.hands.gesture import HandAnalysis
 from keyboardexpanse.hands.landmarks import HandLandmark
-from keyboardexpanse.relay import Relay
-from keyboardexpanse.surfaces import DetectSurfaces
+from keyboardexpanse.keyboard.interceptor import Interceptor
+from keyboardexpanse.keyboard.surfaces import DetectSurfaces
 from keyboardexpanse.utils import apply_overlay
 
 ##########################
 wCam, hCam = 900, 500
 FRAME_RATE_DELAY = 0
-IS_MIRRORED_DOWN = False
+
+# CHANGE ME
+WEBCAM_NUMBER = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
     autopy.mouse.move(x, y)
-    ...
 
 
 MANUAL_DEF_INDEX = 0
@@ -60,12 +62,12 @@ trackpad = np.array([[310, 190], [310, 10], [690, 10], [690, 190]])
 def main():
     """Launch Keyboard Expanse."""
 
-    r = Relay()
-    # r.start()
+    r = Interceptor()
+    r.start()
 
     pTime = 0
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(WEBCAM_NUMBER)
     cap.set(3, wCam)
     cap.set(4, hCam)
     handDetector = detector.HandDetector(maxHands=2)
@@ -132,7 +134,7 @@ def main():
             keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
             # 12. Display
-            # cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
+            cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
             cv2.waitKey(1)
 

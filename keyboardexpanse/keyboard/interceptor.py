@@ -1,52 +1,29 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import datetime
+import os
 import time
-from keyboardexpanse.key_combo import CHAR_TO_KEYNAME
+from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME
+from keyboardexpanse.keyboard.window import Window
 from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
+import yaml
+from keyboardexpanse.oslayer.config import PLATFORM
 
-QWERTY_LSWIPE = "e+r+t"
-QWERTY_RSWIPE = "o+i+u"
+config_path = f"{os.getcwd()}/keyboardexpanse/keyboard/swipe.yaml"
 
-QWERTY_LSWIPE_KEY = "control(alt(right))"
-QWERTY_RSWIPE_KEY = "control(alt(left))"
-
-
-@dataclass
-class Window:
-    values = []
-    recent_index = 0
-    length_nanoseconds = 5e8  # 1s = 1e9ns
-
-    def insert(self, time, item):
-
-        # Expire older than 5
-        while self.values and self.values[0][0] < time - self.length_nanoseconds:
-            self.values.pop(0)
-            self.recent_index -= 1
-
-        if len(self.values) and self.values[-1] and self.values[-1][1] == item:
-            self.values[-1] = (time, item)
-        else:
-            self.values.append((time, item))
-
-        return
-
-    def characters(self):
-        return "+".join(c for ts, c in self.values)
-
-    def clear(self):
-        self.values = []
-        self.recent_index = 0
-
-
-class Relay:
-    def __init__(self, record=False, supress=False) -> None:
+class Interceptor:
+    def __init__(self, verbose=False, record=False, supress=False) -> None:
         self.record = record
         self.supress = supress
+        self.verbose = verbose
         self.pressed = set()
         self.command = "text"
         self.recent = Window()
+
+        self.commands = yaml.load(
+            open(config_path, "r"),
+            Loader=yaml.FullLoader,
+        )
 
         self._kc = KeyboardCapture()
         self._ke = KeyboardEmulation()
@@ -76,7 +53,7 @@ class Relay:
         self._ke.send_key_combination(keycombo)
 
     def on_event(self, key, action):
-        print(key, action)
+        if self.verbose: print(key, action)
 
         if action == "pressed":
             self.recent.insert(time.time_ns(), key)
@@ -86,10 +63,11 @@ class Relay:
         elif key in self.pressed:
             self.pressed.remove(key)
 
-        new_status = f"pressed: {self.recent.characters()}"
-        if self._status != new_status:
-            print(self._status)
-            self._status = new_status
+        if self.verbose:
+            new_status = f"pressed: {self.recent.characters()}"
+            if self._status != new_status:
+                print(self._status)
+                self._status = new_status
 
         # Log
         if self.record:
@@ -98,16 +76,16 @@ class Relay:
 
         # Swipe controls
         characters = self.recent.characters()
-        if QWERTY_LSWIPE in characters:
-            self.send_key_combination(QWERTY_LSWIPE_KEY)
-            self.recent.clear()
+        for swipe in self.commands["swipes"]:
+            if swipe['detection'] in characters:
+                print(f"===> {swipe['name']}")
+                spam_count = len(characters.replace("+", ""))
+                self.send_key_combination(', '.join(["backspace"] * spam_count))
+                self.send_key_combination(swipe['command'])
+                self.recent.clear()
+                break
 
-        if QWERTY_RSWIPE in characters:
-            self.send_key_combination(QWERTY_RSWIPE_KEY)
-            self.recent.clear()
-
-        # TODO(DJRHails): Relaying like this dramatically slows down
-
+        # TODO(DJRHails): Relaying like this dramatically slows down on X11
         # Relay key combinations
         if (
             not self.supress

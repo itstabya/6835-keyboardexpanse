@@ -1,0 +1,13 @@
+swipes:
+  - name: "Next Desktop"
+    detection: "e+r+t"
+    command: "control(alt(right))"
+  - name: "Previous Desktop"
+    detection: "o+i+u"
+    command: "control(alt(left))"
+  - name: "Next Window"
+    detection: "s+d+f"
+    command: "alt(tab)"
+  - name: "Max Screen"
+    detection: "v+f"
+    command: "super(up)"
