@@ -16,14 +16,17 @@ emulate keyboard input.
 
 """
 
-from keyboardexpanse.oslayer.config import PLATFORM
+from keyboardexpanse.oslayer.config import DISPLAY_SERVER, PLATFORM
 
 KEYBOARDCONTROL_NOT_FOUND_FOR_OS = (
-    "No keyboard control module was found for platform: %s" % PLATFORM
+    "No keyboard control module was found for platform: %s - %s" % (PLATFORM, DISPLAY_SERVER)
 )
 
 if PLATFORM in {"linux", "bsd"}:
-    from keyboardexpanse.oslayer import xkeyboardcontrol as keyboardcontrol
+    if DISPLAY_SERVER == "x11":
+        from keyboardexpanse.oslayer import xkeyboardcontrol as keyboardcontrol
+    elif DISPLAY_SERVER == "wayland":
+        from keyboardexpanse.oslayer import waykeyboardcontrol as keyboardcontrol
 elif PLATFORM == "win":
     from keyboardexpanse.oslayer import winkeyboardcontrol as keyboardcontrol
 elif PLATFORM == "mac":

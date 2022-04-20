@@ -1,11 +1,11 @@
 import time
-from keyboardexpanse.relay import Relay
+from keyboardexpanse.keyboard.interceptor import Interceptor
 
 
 def main():
     """Launch Keyboard Expanse."""
     print("Launching Record Keyboard Expanse")
-    r = Relay(supress=True)
+    r = Interceptor(supress=False)
     r.command = "text"
 
     r.start()

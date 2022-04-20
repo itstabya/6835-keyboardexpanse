@@ -4,7 +4,7 @@ from screeninfo import get_monitors
 import cv2
 import autopy
 
-from keyboardexpanse.relay import Relay
+from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.hands.landmarks import HandLandmark
 
 from .detector import TIPS, HandDetector, Handness, Axis
@@ -15,10 +15,10 @@ class HandAnalysis:
     detector: HandDetector
     wCam: int
     hCam: int
-    relay: Relay
+    relay: Interceptor
     onKeyboard = True
-    wScr = autopy.screen.size()[0]
-    hScr = autopy.screen.size()[1]
+    wScr = 0
+    hScr = 0
     frameR = 100
     smoothening = 2
     plocX, plocY = 0, 0 #previous location X, previous location Y
@@ -96,7 +96,7 @@ class HandAnalysis:
                     cv2.circle(
                         img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
                     )
-                    autopy.mouse.click()
+                    # autopy.mouse.click()
            
 
             # Three finger motion

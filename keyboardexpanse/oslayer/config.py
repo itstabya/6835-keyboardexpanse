@@ -10,16 +10,20 @@ import appdirs
 import pkg_resources
 
 
+DISPLAY_SERVER = None
+
 if sys.platform.startswith("darwin"):
     PLATFORM = "mac"
 elif sys.platform.startswith("linux"):
     PLATFORM = "linux"
+    DISPLAY_SERVER = "wayland" if os.environ.get("WAYLAND_DISPLAY") else "x11"
 elif sys.platform.startswith("win"):
     PLATFORM = "win"
 elif sys.platform.startswith(("freebsd", "openbsd")):
     PLATFORM = "bsd"
 else:
     PLATFORM = None
+    
 
 # If the program's working directory has a keyboardexpanse.cfg file then run in
 # "portable mode", i.e. store all data in the same directory. This allows

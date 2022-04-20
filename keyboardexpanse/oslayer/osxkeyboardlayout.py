@@ -17,7 +17,7 @@ import AppKit
 import Foundation
 
 from keyboardexpanse import log
-from keyboardexpanse.key_combo import CHAR_TO_KEYNAME
+from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.misc import popcount_8
 
 

@@ -45,7 +45,7 @@ from Quartz import (
 
 from keyboardexpanse import log
 from keyboardexpanse.oslayer.osxkeyboardlayout import KeyboardLayout
-from keyboardexpanse.key_combo import (
+from keyboardexpanse.keyboard.key_combo import (
     add_modifiers_aliases,
     parse_key_combo,
     KEYNAME_TO_CHAR,
