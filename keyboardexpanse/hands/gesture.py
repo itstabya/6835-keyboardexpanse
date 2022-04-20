@@ -34,6 +34,7 @@ class HandAnalysis:
     def step(self, img, pTime, cTime):
         self.detector.process(img)
         upness = [[0] * 5, [0] * 5]
+        openness = [[0] * 5, [0] * 5]
         # 3. For each hand
         for handness in (Handness.LeftHand, Handness.RightHand):
             handLandmarks = self.detector.landmarks[handness.index]
@@ -41,8 +42,10 @@ class HandAnalysis:
             if not handLandmarks:
                 continue
 
-            # fingers denotes current hand 
+            # fingers denotes current hand, upness designates both hands 
             fingers = self.detector.fingersUp(hand=handness, upAxis=Axis.Y)
+            extended = self.detector.fingersClosed(hand=handness, upAxis=Axis.Y)
+            openness[handness.index] = extended
             upness[handness.index] = fingers
             imageLandmarks, _ = self.detector.findImagePosition(img, hand=handness)
             cv2.rectangle(
@@ -61,7 +64,7 @@ class HandAnalysis:
             # middleX, middleY, _ = handLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
 
             # 4. Only Index Finger : Moving Mode
-            if fingers == [0, 1, 0, 0, 0]:
+            if fingers == [1, 1, 0, 0, 0]:
                 # 5. Convert Coordinates to pixels
                 x3 = int(np.interp(indexX, (0, 1), (0, self.wScr)))
                 y3 = int(np.interp(indexY, (0, 1), (0, self.hScr)))
@@ -73,7 +76,7 @@ class HandAnalysis:
 
                 # 7. Move Mouse
                 if abs(clocX - self.plocX) > 10 or abs(clocY - self.plocY) > 10:
-                    self.on_move(self.wScr - clocX, clocY)
+                  self.on_move(clocX, clocY)
                 cv2.circle(img, (x3, y3), 15, (255, 0, 255), cv2.FILLED)
                 self.plocX, self.plocY = clocX, clocY
 
@@ -120,12 +123,13 @@ class HandAnalysis:
 
         # if upness thumbs and eveerything else is closed
         ONLY_THUMBS = [1, 0, 0, 0, 0]
-        if ((upness[0] == ONLY_THUMBS) and (upness[1] == ONLY_THUMBS)):
+        if ((openness[0] == ONLY_THUMBS) and (openness[1] == ONLY_THUMBS)):
+          print("Both hands thumb open ")
           pass
-        elif (upness[0] == ONLY_THUMBS):
+        elif (openness[0] == ONLY_THUMBS):
           print("Sending Right")
           self.relay.send_key_combination("right")
-        elif (upness[1] == ONLY_THUMBS):
+        elif (openness[1] == ONLY_THUMBS):
           print("Sending Left")
           self.relay.send_key_combination("left")
 

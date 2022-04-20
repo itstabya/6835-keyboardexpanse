@@ -183,6 +183,7 @@ class HandDetector:
         )
 
     def fingersClosed(self, hand=Handness.RightHand, upAxis=Axis.Y):
+      # concerned with clenching of the fist (top down view)
         fingers = []
         handLandmarks = self.landmarks[hand.index]
 
@@ -208,12 +209,13 @@ class HandDetector:
                 else not isTipHigherThanBase
             )
 
-            fingers.append(isTipHigherThanBase)
+            fingers.append(int(isTipHigherThanBase))
 
             for tipIndex, baseIndex in self.referenceIdsFist[1:]:
                 isTipHigherThanBase = (
                     handLandmarks[tipIndex][upAxis] > handLandmarks[baseIndex][upAxis]
                 )
+                fingers.append(int(isTipHigherThanBase))
         else:
             return [0, 0, 0, 0, 0]
         return fingers

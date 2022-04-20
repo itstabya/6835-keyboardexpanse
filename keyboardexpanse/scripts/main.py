@@ -3,7 +3,7 @@ import numpy as np
 import keyboardexpanse.hands.detector as detector
 import time
 
-# import autopy
+import autopy
 from screeninfo import get_monitors
 
 # import pyautogui
@@ -18,13 +18,13 @@ from keyboardexpanse.utils import apply_overlay
 ##########################
 wCam, hCam = 900, 500
 FRAME_RATE_DELAY = 0
-IS_MIRRORED_DOWN = True
+IS_MIRRORED_DOWN = False
 #########################
 
 
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
-    # autopy.mouse.move(x, y)
+    autopy.mouse.move(x, y)
     ...
 
 
@@ -65,7 +65,7 @@ def main():
 
     pTime = 0
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     cap.set(3, wCam)
     cap.set(4, hCam)
     handDetector = detector.HandDetector(maxHands=2)
