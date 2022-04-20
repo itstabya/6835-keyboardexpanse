@@ -42,7 +42,8 @@ class HandAnalysis:
             if not handLandmarks:
                 continue
 
-            # fingers denotes current hand, upness designates both hands 
+            # fingers denotes current hand ()
+            # upness designates both hands 
             fingers = self.detector.fingersUp(hand=handness, upAxis=Axis.Y)
             extended = self.detector.fingersClosed(hand=handness, upAxis=Axis.Y)
             openness[handness.index] = extended
