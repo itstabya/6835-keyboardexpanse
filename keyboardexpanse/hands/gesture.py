@@ -18,7 +18,15 @@ import yaml
 from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.hands.landmarks import HandLandmark
 
-from .detector import CLENCHED_POSITION, TIPS, UP_POSITION, HandDetector, Handness, Axis, compare_positions
+from .detector import (
+    CLENCHED_POSITION,
+    TIPS,
+    UP_POSITION,
+    HandDetector,
+    Handness,
+    Axis,
+    compare_positions,
+)
 
 KNOWN_ACTIONS = {
     # Move Cursor
@@ -32,10 +40,10 @@ KNOWN_ACTIONS = {
     "SelectAll": lambda ha, _: ha._send_key_command(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command(JUMP_TO_TOP),
     "TabOnThumb": lambda ha, hand: ha._tap_command(hand, 0, CHANGE_WINDOWS),
-
     # Utils
-    "NotImplemented": lambda ha, _: print("NotImplemented")
+    "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
+
 
 @dataclass
 class HandAnalysis:
@@ -51,7 +59,7 @@ class HandAnalysis:
     frameR = 0.2
     smoothening = 2
     plocX, plocY = 0, 0  # previous location X, previous location Y
-    prev = ['X'] * 5
+    prev = ["X"] * 5
 
     def start(self):
         monitor = get_monitors()[0]
@@ -78,7 +86,7 @@ class HandAnalysis:
             fingers = self.detector.fingers(hand=handness, upAxis=Axis.Y)
             self.finger_classes[handness.index] = fingers
             imageLandmarks, _ = self.detector.findImagePosition(img, hand=handness)
-            
+
             if annotated:
                 # cv2.rectangle(
                 #     img,
@@ -96,7 +104,9 @@ class HandAnalysis:
                         cv2.circle(img, (x, y), 10, (0, 0, 100), cv2.FILLED)
 
     def _move_cursor_by_index(self, handness):
-        indexX, indexY, _ = self.detector.landmarks[handness.index][HandLandmark.INDEX_FINGER_TIP]
+        indexX, indexY, _ = self.detector.landmarks[handness.index][
+            HandLandmark.INDEX_FINGER_TIP
+        ]
         x3 = np.interp(indexX, (self.frameR, 1 - self.frameR), (0, self.wScr))
         y3 = np.interp(indexY, (self.frameR, 1 - self.frameR), (0, self.hScr))
         # y3 = int(np.interp(indexY, (self.frameR, self.hCam - self.frameR), (0, self.hScr)))
@@ -117,9 +127,9 @@ class HandAnalysis:
             HandLandmark.INDEX_FINGER_TIP,
             HandLandmark.MIDDLE_FINGER_TIP,
             None,
-            hand=handness
+            hand=handness,
         )
-        
+
         if length < 0.07:
             # cv2.circle(
             #     img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
@@ -131,7 +141,6 @@ class HandAnalysis:
         if thumbPos == CLENCHED_POSITION and self.prev[fingerIndex] != thumbPos:
             self.relay.send_key_combination(command)
         self.prev[fingerIndex] = thumbPos
-
 
     def _send_key_command(self, command):
         self.relay.send_key_combination(command)
@@ -145,19 +154,24 @@ class HandAnalysis:
             if "mirror" in gesture["position"]:
                 hand_string = gesture["position"]["mirror"]
                 for handness in (Handness.LeftHand, Handness.RightHand):
-                    if compare_positions(hand_string, self.finger_classes[handness.index]):
+                    if compare_positions(
+                        hand_string, self.finger_classes[handness.index]
+                    ):
                         print(f"! {gesture['name']}")
                         action(self, handness)
             if "left" in gesture["position"] and "right" in gesture["position"]:
                 lhand_str = gesture["position"]["left"]
                 rhand_str = gesture["position"]["right"]
-                matching_left = compare_positions(lhand_str, self.finger_classes[Handness.LeftHand.index])
-                matching_right = compare_positions(rhand_str, self.finger_classes[Handness.RightHand.index])
+                matching_left = compare_positions(
+                    lhand_str, self.finger_classes[Handness.LeftHand.index]
+                )
+                matching_right = compare_positions(
+                    rhand_str, self.finger_classes[Handness.RightHand.index]
+                )
                 if matching_left and matching_right:
                     print(f"! {gesture['name']}")
                     action(self, None)
 
-           
         # # Measure distance
         # # length, img, lineInfo = self.detector.find2HandDistance(
         # #     Handness.LeftHand,

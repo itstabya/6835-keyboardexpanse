@@ -114,7 +114,6 @@ def main():
             if IS_MIRRORED_DOWN:
                 img = cv2.flip(img, 0)
             img = surfaceDetector.detect(img)
-            
 
             # Find regions
             keyboard_buttons_camspace = surfaceDetector.to_cam_space(keyboard_buttons)
