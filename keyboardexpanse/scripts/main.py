@@ -20,8 +20,8 @@ wCam, hCam = 900, 500
 FRAME_RATE_DELAY = 0
 
 # CHANGE ME
-WEBCAM_NUMBER = 0
-IS_MIRRORED_DOWN = True
+WEBCAM_NUMBER = 1
+IS_MIRRORED_DOWN = False
 #########################
 
 
@@ -69,8 +69,11 @@ def main():
     frameCount = 0
 
     cap = cv2.VideoCapture(WEBCAM_NUMBER)
-    cap.set(3, wCam)
-    cap.set(4, hCam)
+    _, img = cap.read()
+    # cap.set(3, img.shape[0])
+    # cap.set(4, img.shape[1])
+    wCam, hCam, _ = img.shape
+
     handDetector = detector.HandDetector(maxHands=2)
     handAnalyser = HandAnalysis(
         detector=handDetector,
@@ -102,14 +105,15 @@ def main():
         while True:
             # 1. Find hand Landmarks
             _, img = cap.read()
+
             # mirror image for convenience
             img = cv2.flip(img, 2)
 
             # Flip if mirrored down
             if IS_MIRRORED_DOWN:
                 img = cv2.flip(img, 0)
-
             img = surfaceDetector.detect(img)
+            
 
             # Find regions
             keyboard_buttons_camspace = surfaceDetector.to_cam_space(keyboard_buttons)

@@ -19,7 +19,9 @@ class HandAnalysis:
     onKeyboard = True
     wScr = 0
     hScr = 0
-    frameR = 100
+    frameX = 400
+    frameY = 100
+    frameR = 0.2
     smoothening = 2
     plocX, plocY = 0, 0 #previous location X, previous location Y
     prevThumb = 0
@@ -50,8 +52,8 @@ class HandAnalysis:
             imageLandmarks, _ = self.detector.findImagePosition(img, hand=handness)
             cv2.rectangle(
                 img,
-                (self.frameR, self.frameR),
-                (self.wCam - self.frameR, self.hCam - self.frameR),
+                (int(self.frameR * (self.hCam - self.hCam * self.frameR)), int(self.frameR * (self.wCam - (self.wCam * self.frameR)))),
+                (int(self.hCam * self.frameR), int(self.wCam * self.frameR)),
                 (255, 0, 255),
                 2,
             )
@@ -64,13 +66,14 @@ class HandAnalysis:
             # middleX, middleY, _ = handLandmarks[HandLandmark.MIDDLE_FINGER_TIP]
 
             # 4. Only Index Finger : Moving Mode
-            if fingers == [1, 1, 0, 0, 0] or fingers == [0, 1, 0, 0, 0]:
-                # 5. Convert Coordinates to pixels
+            if (extended == [1, 1, 0, 0, 0] or extended == [0, 1, 0, 0, 0]):
+                # 5. Convert Coordinates to pixel
                 #x3 = int(np.interp(indexX, (self.frameR, self.wCam - self.frameR), (0, self.wScr)))
-                x3 = np.interp(indexX, (0, 1), (0, self.wScr))
-                y3 = np.interp(indexY, (0, 1), (0, self.hScr))
-                # y3 = int(np.interp(indexY, (self.frameR, self.hCam - self.frameR), (0, self.hScr)))
-                # 6. Smoothen Values
+                x3 = int(np.interp(indexX, (self.frameR, 1 - self.frameR), (0, self.wScr)))
+                y3 = int(np.interp(indexY, (self.frameR, 1 - self.frameR), (0, self.hScr)))
+                # print(x3, y3)
+                print(np.interp(indexX, (self.frameR, 1 - self.frameR), (0, self.wScr)))
+                print(x3, y3)
                 clocX = self.plocX + (x3 - self.plocX) / self.smoothening
                 clocY = self.plocY + (y3 - self.plocY) / self.smoothening
                 # to flip, do wScr - x3, y3
@@ -83,7 +86,7 @@ class HandAnalysis:
                 self.plocX, self.plocY = clocX, clocY
 
             # 8. Both Index and middle fingers are up : Clicking Mode
-            if fingers == [1, 1, 1, 0, 0]:
+            if extended == [0, 1, 1, 0, 0]:
                 # 9. Find distance between fingers
                 length, img, lineInfo = self.detector.findDistance(
                     HandLandmark.INDEX_FINGER_TIP,
@@ -96,14 +99,12 @@ class HandAnalysis:
                     cv2.circle(
                         img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED
                     )
-                    # autopy.mouse.click()
+                    autopy.mouse.click()
            
-
             # Three finger motion
-            
             if extended[1:] == [1, 0, 0, 1]:
                 thumbOut = extended[0]
-                if thumbOut and self.prevThumb != thumbOut:
+                if self.prevThumb != thumbOut:
                     print("Sending Alt Tab")
                     self.relay.send_key_combination("super_l(Tab)")
 
@@ -131,21 +132,21 @@ class HandAnalysis:
         # TODO: need to gauge sensitivity 
         if ((openness[0] == ONLY_THUMBS) and (openness[1] == ONLY_THUMBS)):
           pass
-        elif (openness[0] == ONLY_THUMBS):
+        elif (openness[0] == ONLY_THUMBS and upness[0] == [1, 0, 0, 0, 0]):
           print("Sending Right")
           self.relay.send_key_combination("right")
         elif (openness[1] == ONLY_THUMBS):
           print("Sending Left")
           self.relay.send_key_combination("left")
-        elif (openness[0] == [1, 1, 0, 0, 0] and openness[1] == [1, 1, 0, 0, 0]):
-          print("Selecting All")
-          self.relay.send_key_combination("command(a)")
-        elif (openness[0] == [1, 1, 0, 0, 0]):
-          print("Selecting Right")
-          self.relay.send_key_combination("shift(right)")
-        elif (openness[1] == [1, 1, 0, 0, 0]):
-          print("Selecting Left")
-          self.relay.send_key_combination("shift(left)")
+        # elif (openness[0] == [1, 1, 0, 0, 0] and openness[1] == [1, 1, 0, 0, 0]):
+        #   print("Selecting All")
+        #   self.relay.send_key_combination("command(a)")
+        # elif (openness[0] == [1, 1, 0, 0, 0]):
+        #   print("Selecting Right")
+        #   self.relay.send_key_combination("shift(right)")
+        # elif (openness[1] == [1, 1, 0, 0, 0]):
+        #   print("Selecting Left")
+        #   self.relay.send_key_combination("shift(left)")
         
 
         # POINTING UP COMMAND
@@ -168,9 +169,8 @@ class HandAnalysis:
                 landmark2=HandLandmark.INDEX_FINGER_TIP,
                 img=img,
             )
-            # print(length)
+            print(length)
             # 10. Click mouse if distance short
             if length < 0.1:
                 cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
-
         return img
