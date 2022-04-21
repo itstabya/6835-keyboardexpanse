@@ -3,13 +3,13 @@ from datetime import timedelta
 import datetime
 import os
 import time
+from keyboardexpanse.keyboard.hotkeys import BACKSPACE
 from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.keyboard.window import Window
 from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
 import yaml
-from keyboardexpanse.oslayer.config import PLATFORM
+from keyboardexpanse.oslayer.config import CONFIG_PATH, PLATFORM
 
-config_path = f"{os.getcwd()}/keyboardexpanse/keyboard/swipe.yaml"
 
 class Interceptor:
     def __init__(self, verbose=False, record=False, supress=False) -> None:
@@ -20,8 +20,8 @@ class Interceptor:
         self.command = "text"
         self.recent = Window()
 
-        self.commands = yaml.load(
-            open(config_path, "r"),
+        self.config = yaml.load(
+            open(CONFIG_PATH, "r"),
             Loader=yaml.FullLoader,
         )
 
@@ -50,10 +50,12 @@ class Interceptor:
         self._kc.cancel()
 
     def send_key_combination(self, keycombo):
+        print(f"Sending -> {keycombo}")
         self._ke.send_key_combination(keycombo)
 
     def on_event(self, key, action):
-        if self.verbose: print(key, action)
+        if self.verbose:
+            print(key, action)
 
         if action == "pressed":
             self.recent.insert(time.time_ns(), key)
@@ -76,12 +78,12 @@ class Interceptor:
 
         # Swipe controls
         characters = self.recent.characters()
-        for swipe in self.commands["swipes"]:
-            if swipe['detection'] in characters:
+        for swipe in self.config["swipes"]:
+            if swipe["detection"] in characters:
                 print(f"===> {swipe['name']}")
                 spam_count = len(characters.replace("+", ""))
-                self.send_key_combination(', '.join(["backspace"] * spam_count))
-                self.send_key_combination(swipe['command'])
+                self.send_key_combination(", ".join([BACKSPACE] * spam_count))
+                self.send_key_combination(swipe["command"])
                 self.recent.clear()
                 break
 

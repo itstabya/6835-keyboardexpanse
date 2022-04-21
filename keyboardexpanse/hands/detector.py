@@ -53,7 +53,7 @@ BASES = [
     HandLandmark.RING_FINGER_TIP,
     HandLandmark.RING_FINGER_TIP,
     HandLandmark.MIDDLE_FINGER_TIP,
-    HandLandmark.RING_FINGER_TIP
+    HandLandmark.RING_FINGER_TIP,
 ]
 
 THRESHOLDS = [
@@ -64,31 +64,50 @@ THRESHOLDS = [
     -0.15,
 ]
 
+RESTING_POSITION = "R"
+UP_POSITION = "U"
+CLENCHED_POSITION = "C"
+DONTCARE_POSITION = "X"
+
+def compare_positions(posA, posB) -> bool:
+    if len(posA) != len(posB):
+        return False
+
+    for a, b in zip(posA, posB):
+        if a == b:
+            continue
+        if a == DONTCARE_POSITION or b == DONTCARE_POSITION:
+            continue
+        return False
+    return True
 
 class HandDetector:
     def __init__(
-        self, mode=False, maxHands=2, modelComplexity=1, detectionCon=0.5, trackCon=0.5
+        self,
+        mode=False,
+        maxHands=2,
+        modelComplexity=1,
+        detectionConfidence=0.5,
+        trackingConfidence=0.8,
     ):
         self.mode = mode
         self.maxHands = maxHands
         self.modelComplex = modelComplexity
 
-        self.detectionCon = detectionCon
-        self.trackCon = trackCon
+        self.detectionConfidence = detectionConfidence
+        self.trackingConfidence = trackingConfidence
 
         self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands(
             self.mode,
             self.maxHands,
             self.modelComplex,
-            self.detectionCon,
-            self.trackCon,
+            self.detectionConfidence,
+            self.trackingConfidence,
         )
         self.mpDraw = mp.solutions.drawing_utils
 
         self.referenceIds = list(zip(TIPS, BASES, THRESHOLDS))
-        self.referenceIdsFist = list(zip(TIPS, BASE_FOR_FIST))
-
 
     def process(self, img, draw=True):
 
@@ -182,45 +201,7 @@ class HandDetector:
             else not thumbToTheLeftOfWrist
         )
 
-    def fingersClosed(self, hand=Handness.RightHand, upAxis=Axis.Y):
-      # concerned with clenching of the fist (top down view)
-        fingers = []
-        handLandmarks = self.landmarks[hand.index]
-
-        if handLandmarks:
-            # Thumb is 'special'
-
-            tipIndex, baseIndex = self.referenceIdsFist[0]
-            isTipHigherThanBase = (
-                handLandmarks[tipIndex][Axis.X] < handLandmarks[baseIndex][Axis.X]
-            )
-
-            # Left hand is inverted for the thumb
-            isTipHigherThanBase = (
-                isTipHigherThanBase
-                if hand == Handness.RightHand
-                else not isTipHigherThanBase
-            )
-
-            # # It is also inverted if the palm is not facing the camera
-            isTipHigherThanBase = (
-                isTipHigherThanBase
-                if self.isPalmFacingCamera(hand)
-                else not isTipHigherThanBase
-            )
-
-            fingers.append(int(isTipHigherThanBase))
-
-            for tipIndex, baseIndex in self.referenceIdsFist[1:]:
-                isTipHigherThanBase = (
-                    handLandmarks[tipIndex][upAxis] > handLandmarks[baseIndex][upAxis]
-                )
-                fingers.append(int(isTipHigherThanBase))
-        else:
-            return [0, 0, 0, 0, 0]
-        return fingers
-
-    def fingersUp(self, hand=Handness.RightHand, upAxis=Axis.Y):
+    def fingers(self, hand=Handness.RightHand, upAxis=Axis.Y) -> str:
         # upAxis:
         # 0 = X
         # 1 = Y
@@ -233,6 +214,8 @@ class HandDetector:
         # C [      ]
         #    [    ]
 
+        # => "UUUUU"
+
         # Thumb: Extension by X displacement
         # Fingers: Extension by Y displacement
 
@@ -242,7 +225,7 @@ class HandDetector:
         # Thumb: Extension by Y displacement
         # Fingers: Extension by Z displacement (beyond norm) or Y displacemen
 
-        fingers = []
+        fingers = ""
         handLandmarks = self.landmarks[hand.index]
 
         if handLandmarks:
@@ -267,28 +250,35 @@ class HandDetector:
                 else not isTipHigherThanBase
             )
 
-            fingers.append(isTipHigherThanBase)
+            if isTipHigherThanBase:
+                fingers += UP_POSITION
+            else:
+                fingers += CLENCHED_POSITION
 
-            for tipIndex, baseIndex, threshold in self.referenceIds[1:]:
+            for index, (tipIndex, baseIndex, threshold) in enumerate(
+                self.referenceIds[1:]
+            ):
+                baseIndexForClosed = BASE_FOR_FIST[index + 1]
                 p = handLandmarks[tipIndex][upAxis]
                 q = handLandmarks[baseIndex][upAxis]
+                r = handLandmarks[baseIndexForClosed][upAxis]
                 dist = p - q
-                # isTipHigherThanBase = (
-                #     handLandmarks[tipIndex][upAxis] - handLandmarks[baseIndex][upAxis] > .02
-                # )
-                # print(isTipHigherThanBase, handLandmarks[tipIndex][upAxis] - handLandmarks[baseIndex][upAxis])
-                fingers.append(dist < threshold)
 
-                # dist, _, _ = self.findDistance(tipIndex, baseIndex, hand=hand)
-                # print(dist)
-                # fingers.append(dist > 0.05)
+                isUp = dist < threshold
+                isClenched = p < r
 
-            # totalFingers = fingers.count(1)
-        else:
-            return [0, 0, 0, 0, 0]
+                if isUp:
+                    fingers += UP_POSITION
+                elif isClenched:
+                    fingers += CLENCHED_POSITION
+                else:
+                    fingers += RESTING_POSITION
+
         return fingers
 
-    def findDistance(self, p1, p2, img=None, hand=Handness.RightHand, draw=True, r=15, t=3):
+    def findDistance(
+        self, p1, p2, img=None, hand=Handness.RightHand, draw=True, r=15, t=3
+    ):
         return self.find2HandDistance(hand, p1, hand, p2, img, draw, r, t)
 
     def find2HandDistance(
@@ -308,7 +298,6 @@ class HandDetector:
         if not hand1Landmarks or not hand2Landmarks:
             return 1, img, []
 
-
         x1, y1, _ = hand1Landmarks[landmark1]
         x2, y2, _ = hand2Landmarks[landmark2]
         length = math.hypot(x2 - x1, y2 - y1)
@@ -327,5 +316,5 @@ class HandDetector:
             cv2.circle(img, (cx1, cy1), r, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, (cx2, cy2), r, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, (cx, cy), r, (0, 0, 255), cv2.FILLED)
-        
+
         return length, img, lineinfo

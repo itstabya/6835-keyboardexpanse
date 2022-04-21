@@ -48,43 +48,44 @@ class HandDetector:
         return img
 
     def findLandmarks(self, img, landmarks, draw=True):
-      xList, yList, lmList, bbox = [], [], [], []
-      for id, lm in enumerate(landmarks.landmark):
-        h, w, c = img.shape
-        cx, cy = int(lm.x * w), int(lm.y * h)
-        xList.append(cx)
-        yList.append(cy)
-        lmList.append([id, cx, cy])
+        xList, yList, lmList, bbox = [], [], [], []
+        for id, lm in enumerate(landmarks.landmark):
+            h, w, c = img.shape
+            cx, cy = int(lm.x * w), int(lm.y * h)
+            xList.append(cx)
+            yList.append(cy)
+            lmList.append([id, cx, cy])
+            if draw:
+                cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
+            xmin, xmax = min(xList), max(xList)
+            ymin, ymax = min(yList), max(yList)
+            bbox = xmin, ymin, xmax, ymax
         if draw:
-          cv2.circle(img, (cx, cy), 5, (255, 0, 255), cv2.FILLED)
-        xmin, xmax = min(xList), max(xList)
-        ymin, ymax = min(yList), max(yList)
-        bbox = xmin, ymin, xmax, ymax
-      if draw:
-        cv2.rectangle(
-          img, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20), (0, 255, 0), 2)
-      return lmList, bbox 
+            cv2.rectangle(
+                img, (xmin - 20, ymin - 20), (xmax + 20, ymax + 20), (0, 255, 0), 2
+            )
+        return lmList, bbox
 
     def findPosition(self, img, handNo=0, draw=True):
         self.lmList = []
         # print(self.results.multi_handedness)
         if self.results.multi_hand_landmarks:
-          hand = self.results.multi_hand_landmarks[0]
-          handLms, handbbox = self.findLandmarks(img, hand)
-          self.lmList = handLms
-          first_label = self.results.multi_handedness[0].classification[0].label
-          if len(self.results.multi_hand_landmarks) == 2:
-            hand2 = self.results.multi_hand_landmarks[1]
-            hand2Lms, hand1bbox = self.findLandmarks(img, hand2)
-            label = self.results.multi_handedness[1].classification[0].label
-            if label == "Left":
-              self.lmList = hand2Lms + self.lmList
-            else: 
-              self.lmList += hand2Lms
-          which_hands = first_label
-          if len(self.lmList) == 42:
-            which_hands = "Both"
-          return self.lmList, which_hands # ALWAYS L TO R if BOTH HANDS
+            hand = self.results.multi_hand_landmarks[0]
+            handLms, handbbox = self.findLandmarks(img, hand)
+            self.lmList = handLms
+            first_label = self.results.multi_handedness[0].classification[0].label
+            if len(self.results.multi_hand_landmarks) == 2:
+                hand2 = self.results.multi_hand_landmarks[1]
+                hand2Lms, hand1bbox = self.findLandmarks(img, hand2)
+                label = self.results.multi_handedness[1].classification[0].label
+                if label == "Left":
+                    self.lmList = hand2Lms + self.lmList
+                else:
+                    self.lmList += hand2Lms
+            which_hands = first_label
+            if len(self.lmList) == 42:
+                which_hands = "Both"
+            return self.lmList, which_hands  # ALWAYS L TO R if BOTH HANDS
         return [], "None"
 
     def fingersUp(self, upAxis=2):
@@ -115,7 +116,6 @@ class HandDetector:
             return fingers
         else:
             return [0, 0, 0, 0, 0]
-        
 
     def findDistance(self, p1, p2, img, draw=True, r=15, t=3):
         x1, y1 = self.lmList[p1][1:]

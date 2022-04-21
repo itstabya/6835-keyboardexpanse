@@ -19,7 +19,8 @@ emulate keyboard input.
 from keyboardexpanse.oslayer.config import DISPLAY_SERVER, PLATFORM
 
 KEYBOARDCONTROL_NOT_FOUND_FOR_OS = (
-    "No keyboard control module was found for platform: %s - %s" % (PLATFORM, DISPLAY_SERVER)
+    "No keyboard control module was found for platform: %s - %s"
+    % (PLATFORM, DISPLAY_SERVER)
 )
 
 if PLATFORM in {"linux", "bsd"}:
@@ -75,12 +76,6 @@ if __name__ == "__main__":
             pressed.remove(key)
 
         ke.send_string(key)
-
-        # new_status = 'pressed: ' + '+'.join(pressed)
-        # if status != new_status:
-        #     ke.send_backspaces(len(status))
-        #     ke.send_string(new_status)
-        #     status = new_status
 
     kc.key_down = lambda k: on_event(k, "pressed")
     kc.key_up = lambda k: on_event(k, "released")

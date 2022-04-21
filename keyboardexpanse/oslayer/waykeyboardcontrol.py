@@ -1,4 +1,3 @@
-
 """Keyboard capture and control using 'keyboard' library.
 
 """
@@ -8,9 +7,15 @@ import keyboard
 from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
 from keyboardexpanse import log
 
+
 def to_keyboard_shortcut(key_command: str) -> str:
-    key_command = key_command.replace('super_l', 'windows').replace('super_r', 'windows').replace('super', 'windows')
+    key_command = (
+        key_command.replace("super_l", "windows")
+        .replace("super_r", "windows")
+        .replace("super", "windows")
+    )
     return key_command.replace("(", "+").replace(")", "")
+
 
 class KeyboardCapture:
     """Listen to keyboard press and release events."""
@@ -32,7 +37,6 @@ class KeyboardCapture:
                 self.key_down(event.name)
             # print(event.to_json(ensure_ascii=sys.stdout.encoding != "utf-8"))
             # sys.stdout.flush()
-
 
         keyboard.hook(print_event_json)
 
@@ -62,20 +66,31 @@ class KeyboardEmulation:
         key events. In order to prevent this, all KeyboardCapture
         instances are told to ignore the emulated key events.
         """
-        if (125, ()) not in keyboard._os_keyboard.to_name or keyboard._os_keyboard.to_name[(125, ())] == ['alt']:
+        if (
+            125,
+            (),
+        ) not in keyboard._os_keyboard.to_name or keyboard._os_keyboard.to_name[
+            (125, ())
+        ] == [
+            "alt"
+        ]:
             keyboard._os_keyboard.to_name[(125, ())].clear()
-            if (125, ()) in keyboard._os_keyboard.from_name['alt']:
-                keyboard._os_keyboard.from_name['alt'].remove((125, ()))
-            keyboard._os_keyboard.register_key((125, ()), 'windows')
-        if (126, ()) not in keyboard._os_keyboard.to_name or keyboard._os_keyboard.to_name[(126, ())] == ['alt']:
+            if (125, ()) in keyboard._os_keyboard.from_name["alt"]:
+                keyboard._os_keyboard.from_name["alt"].remove((125, ()))
+            keyboard._os_keyboard.register_key((125, ()), "windows")
+        if (
+            126,
+            (),
+        ) not in keyboard._os_keyboard.to_name or keyboard._os_keyboard.to_name[
+            (126, ())
+        ] == [
+            "alt"
+        ]:
             keyboard._os_keyboard.to_name[(126, ())].clear()
-            if (126, ()) in keyboard._os_keyboard.from_name['alt']:
-                keyboard._os_keyboard.from_name['alt'].remove((126, ()))
-            keyboard._os_keyboard.register_key((126, ()), 'windows')
-
+            if (126, ()) in keyboard._os_keyboard.from_name["alt"]:
+                keyboard._os_keyboard.from_name["alt"].remove((126, ()))
+            keyboard._os_keyboard.register_key((126, ()), "windows")
 
         shortcut_string = to_keyboard_shortcut(combo_string)
-        print(shortcut_string, keyboard.parse_hotkey(shortcut_string))
-        keyboard.send(to_keyboard_shortcut(combo_string))
-
-  
+        # print(shortcut_string, keyboard.parse_hotkey(shortcut_string))
+        keyboard.send(shortcut_string)

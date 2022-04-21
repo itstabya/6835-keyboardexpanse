@@ -23,7 +23,10 @@ elif sys.platform.startswith(("freebsd", "openbsd")):
     PLATFORM = "bsd"
 else:
     PLATFORM = None
-    
+
+
+CONFIG_PATH = f"{os.getcwd()}/keyboardexpanse/config.yaml"
+
 
 # If the program's working directory has a keyboardexpanse.cfg file then run in
 # "portable mode", i.e. store all data in the same directory. This allows

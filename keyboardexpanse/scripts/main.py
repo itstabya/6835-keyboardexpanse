@@ -16,7 +16,7 @@ from keyboardexpanse.keyboard.surfaces import DetectSurfaces
 from keyboardexpanse.utils import apply_overlay
 
 ##########################
-wCam, hCam = 900, 500
+wCam, hCam = None, None
 FRAME_RATE_DELAY = 0
 
 # CHANGE ME
@@ -70,18 +70,10 @@ def main():
 
     cap = cv2.VideoCapture(WEBCAM_NUMBER)
     _, img = cap.read()
-    # cap.set(3, img.shape[0])
-    # cap.set(4, img.shape[1])
     wCam, hCam, _ = img.shape
-
     handDetector = detector.HandDetector(maxHands=2)
-    handAnalyser = HandAnalysis(
-        detector=handDetector,
-        wCam=wCam,
-        hCam=hCam,
-        relay=r
-    )
-    handAnalyser.detect_monitors()
+    handAnalyser = HandAnalysis(detector=handDetector, wCam=wCam, hCam=hCam, relay=r)
+    handAnalyser.start()
     handAnalyser.register_hooks(on_move=simulate_on_move)
 
     surfaceDetector = DetectSurfaces()
@@ -89,7 +81,7 @@ def main():
     # Create windows
     cv2.namedWindow(KEYBOARD_WINDOW)
     cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
-    
+
     # Setup Callbacks
     cv2.setMouseCallback(ANNOTATED_WEBCAM_WINDOW, make_on_click(surfaceDetector))
 
@@ -121,14 +113,12 @@ def main():
             # img = apply_overlay(img, keyboard_buttons_camspace)
             # img = apply_overlay(img, trackpad_camspace, color=(255, 0, 0))
 
-
             # 11. Frame Rate
             cTime = time.time()
             frameCount += 1
             img = handAnalyser.step(img, pTime, cTime, frameCount)
 
             fps = 1 / (cTime - pTime)
-            
 
             if (cTime - pTime) < FRAME_RATE_DELAY:
                 time.sleep(FRAME_RATE_DELAY - (cTime - pTime))

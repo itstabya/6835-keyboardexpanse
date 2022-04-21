@@ -3,7 +3,7 @@ import numpy as np
 import htm
 import time
 import autopy
-import pynput 
+import pynput
 from pynput.mouse import Button, Controller
 
 MOUSE_ON = False
@@ -30,11 +30,13 @@ wScr, hScr = autopy.screen.size()
 mouse = Controller()
 # mouse.position set mouse position to the middle of the screenn
 
+
 def simulate_on_move(x, y):
     ...
     autopy.mouse.move(wScr - x, y)
     # print(wScr-x, y)
     # mouse.position(wScr-x, y)
+
 
 def simulate_on_click(x, y, button, pressed):
     ...
@@ -71,7 +73,6 @@ while True:
         cv2.circle(img, (x1, y1), 15, (255, 0, 255), cv2.FILLED)
         plocX, plocY = clocX, clocY
         simulate_on_move(clocX, clocY)
-        
 
     # # 8. Both Index and middle fingers are up : Clicking Mode
     if fingers[1] == 1 and fingers[2] == 1:
@@ -80,8 +81,7 @@ while True:
         print(length)
         # 10. Click mouse if distance short
         if length < 30:
-            cv2.circle(img, (lineInfo[4], lineInfo[5]),
-            15, (0, 255, 0), cv2.FILLED)
+            cv2.circle(img, (lineInfo[4], lineInfo[5]), 15, (0, 255, 0), cv2.FILLED)
             autopy.mouse.click()
 
     # 11. Frame Rate
@@ -90,9 +90,9 @@ while True:
     pTime = cTime
     cv2.putText(img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
     # 12. Display
-    flip_img = cv2.flip(img, 2) # mirror image for convenience 
+    flip_img = cv2.flip(img, 2)  # mirror image for convenience
     cv2.imshow("Image", flip_img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 # After the loop release the cap object

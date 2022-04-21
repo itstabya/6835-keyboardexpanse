@@ -1,0 +1,64 @@
+swipes:
+  - name: "Next Desktop"
+    detection: "e+r+t"
+    command: "control(alt(right))"
+  - name: "Previous Desktop"
+    detection: "o+i+u"
+    command: "control(alt(left))"
+  - name: "Next Window"
+    detection: "s+d+f"
+    command: "alt(tab)"
+  - name: "Max Screen"
+    detection: "v+f"
+    command: "super(up)"
+hands:
+  - name: "Point"
+    position:
+      mirror: "XURRR"
+    action: "MoveCursorByIndex"
+  - name: "Peace"
+    position:
+      mirror: "XUURR"
+    action: "MoveCursorByIndexTwo"
+  - name: "Rock Star"
+    position:
+      mirror: "XURRU"
+    action: "NotImplemented"
+  - name: "Flat Rock Star"
+    position:
+      mirror: "XRCCR"
+    action: "TabOnThumb"
+  - name: "Left Thumb Out"
+    position:
+      left:  "UCCCC"
+      right: "CCCCC"
+    action: "MoveLeft"
+  - name: "Right Thumb Out"
+    position:
+      left:  "CCCCC"
+      right: "UCCCC"
+    action: "MoveRight"
+  - name: "Lefthanded L"
+    position:
+      left: "URCCC"
+      right: "CCCCC"
+    action: "SelectLeft"
+  - name: "Righthanded L"
+    position:
+      left: "CCCCC"
+      right: "URCCC"
+    action: "SelectRight"
+  - name: "Double L"
+    position:
+      left: "URCCC"
+      right: "URCCC"
+    action: "SelectAll"
+  - name: "Thumbless pointing"
+    position:
+      left: "CUCCC"
+      right: "CUCCC"
+    action: "JumpUp"
+  - name: "Pinky"
+    position:
+      mirror: "RRRRU"
+    action: "NotImplemented"
