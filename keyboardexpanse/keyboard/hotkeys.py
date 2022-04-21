@@ -11,7 +11,7 @@ CHANGE_WINDOWS = "alt(tab)"
 
 BACKSPACE = "backspace"
 
-if PLATFORM == "osx":
+if PLATFORM == "mac":
     SELECT_ALL = SELECT_ALL.replace("ctrl", "command")
     JUMP_TO_TOP = JUMP_TO_TOP.replace("ctrl", "command")
     CHANGE_WINDOWS = "super_l(tab)"

@@ -80,13 +80,13 @@ class HandAnalysis:
             imageLandmarks, _ = self.detector.findImagePosition(img, hand=handness)
             
             if annotated:
-                cv2.rectangle(
-                    img,
-                    (self.frameR, self.frameR),
-                    (self.wCam - self.frameR, self.hCam - self.frameR),
-                    (255, 0, 255),
-                    2,
-                )
+                # cv2.rectangle(
+                #     img,
+                #     (self.frameR, self.frameR),
+                #     (self.wCam - self.frameR, self.hCam - self.frameR),
+                #     (255, 0, 255),
+                #     2,
+                # )
                 for finger, clazz in enumerate(fingers):
                     if clazz == UP_POSITION:
                         x, y = imageLandmarks[TIPS[finger]]

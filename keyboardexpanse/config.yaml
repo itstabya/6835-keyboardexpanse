@@ -14,11 +14,19 @@ swipes:
 hands:
   - name: "Point"
     position:
-      mirror: "XURRR"
+      mirror: "CUCCC"
+    action: "MoveCursorByIndex"
+  - name: "Point"
+    position:
+      mirror: "CRCCC"
     action: "MoveCursorByIndex"
   - name: "Peace"
     position:
-      mirror: "XUURR"
+      mirror: "XRRUC"
+    action: "MoveCursorByIndexTwo"
+  - name: "Peace"
+    position:
+      mirror: "XRRCC"
     action: "MoveCursorByIndexTwo"
   - name: "Rock Star"
     position:
@@ -32,22 +40,22 @@ hands:
     position:
       left:  "UCCCC"
       right: "CCCCC"
-    action: "MoveLeft"
+    action: "MoveRight"
   - name: "Right Thumb Out"
     position:
       left:  "CCCCC"
       right: "UCCCC"
-    action: "MoveRight"
+    action: "MoveLeft"
   - name: "Lefthanded L"
     position:
-      left: "URCCC"
+      left: "UCCCR"
       right: "CCCCC"
-    action: "SelectLeft"
+    action: "SelectRight"
   - name: "Righthanded L"
     position:
-      left: "CCCCC"
-      right: "URCCC"
-    action: "SelectRight"
+      left: "XXXXX"
+      right: "UCCCR"
+    action: "SelectLeft"
   - name: "Double L"
     position:
       left: "URCCC"
@@ -55,8 +63,8 @@ hands:
     action: "SelectAll"
   - name: "Thumbless pointing"
     position:
-      left: "CUCCC"
-      right: "CUCCC"
+      left: "URCCC"
+      right: "XXXXX"
     action: "JumpUp"
   - name: "Pinky"
     position:
