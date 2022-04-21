@@ -69,6 +69,7 @@ UP_POSITION = "U"
 CLENCHED_POSITION = "C"
 DONTCARE_POSITION = "X"
 
+
 def compare_positions(posA, posB) -> bool:
     if len(posA) != len(posB):
         return False
@@ -80,6 +81,7 @@ def compare_positions(posA, posB) -> bool:
             continue
         return False
     return True
+
 
 class HandDetector:
     def __init__(
