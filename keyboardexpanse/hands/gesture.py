@@ -42,6 +42,7 @@ KNOWN_ACTIONS = {
     "SelectAll": lambda ha, _: ha._send_key_command_once(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
     "TabOnThumb": lambda ha, hand: ha._send_key_command_once(hand, 0, CHANGE_WINDOWS),
+    "NewWindow": lambda ha, hannd: ha._send_key_command_once(NEW_WINDOW), 
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
