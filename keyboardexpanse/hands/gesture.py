@@ -137,10 +137,16 @@ class HandAnalysis:
             autopy.mouse.click()
 
     def _tap_command(self, handness, fingerIndex, command):
-        thumbPos = self.finger_classes[handness.index][fingerIndex]
-        if thumbPos == CLENCHED_POSITION and self.prev[fingerIndex] != thumbPos:
+        wigglePos = self.finger_classes[handness.index][fingerIndex]
+        if wigglePos == CLENCHED_POSITION and self.prev[fingerIndex] != wigglePos:
             self.relay.send_key_combination(command)
-        self.prev[fingerIndex] = thumbPos
+        self.prev[fingerIndex] = wigglePos
+
+    # def _tap_with_held_command(self, handness, fingerIndex, command):
+    #     wigglePos = self.finger_classes[handness.index][fingerIndex]
+    #     if wigglePos == CLENCHED_POSITION and self.prev[fingerIndex] != wigglePos:
+    #         self.relay.send_key_combination(command)
+    #     self.prev[fingerIndex] = wigglePos
 
     def _send_key_command(self, command):
         self.relay.send_key_combination(command)

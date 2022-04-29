@@ -8,9 +8,7 @@ from screeninfo import get_monitors
 
 # import pyautogui
 
-from keyboardexpanse.hands.detector import Handness
 from keyboardexpanse.hands.gesture import HandAnalysis
-from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.keyboard.surfaces import DetectSurfaces
 from keyboardexpanse.utils import apply_overlay
@@ -20,8 +18,8 @@ wCam, hCam = None, None
 FRAME_RATE_DELAY = 0
 
 # CHANGE ME
-WEBCAM_NUMBER = 1
-IS_MIRRORED_DOWN = False
+WEBCAM_NUMBER = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
@@ -101,14 +99,12 @@ def main():
             # mirror image for convenience
             img = cv2.flip(img, 2)
 
-             
-            scale_percent = 40 # percent of original size
-            width = int(img.shape[1] * scale_percent / 100)
-            height = int(img.shape[0] * scale_percent / 100)
-            dim = (width, height)
-  
-# resize image
-            img = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+            # resize image
+            # scale_percent = 40  # percent of original size
+            # width = int(img.shape[1] * scale_percent / 100)
+            # height = int(img.shape[0] * scale_percent / 100)
+            # dim = (width, height)
+            # img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
 
             # Flip if mirrored down
             if IS_MIRRORED_DOWN:

@@ -3,9 +3,12 @@ import keyboard, time
 
 keyboard.add_hotkey("ctrl+shift+a", print, args=("triggered", "hotkey"))
 
-for i in range(4):
-    keyboard.send("alt+tab")
-    time.sleep(1)
+# keyboard.press("alt")
+# for i in range(4):
+#     keyboard.press_and_release("tab")
+#     time.sleep(1)
+# keyboard.release("alt")
+
 # Blocks until you press esc.
 keyboard.wait("esc")
 

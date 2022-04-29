@@ -14,3 +14,25 @@
 ```
 sudo -E env PATH=$PATH python3 -m keyboardexpanse
 ```
+
+## Concepts
+
+- Chord = simultaneously pressed commands
+- Consume keystrokes until out of sequence
+- Directional commands
+    - Benefit from scaling: Rotation/Scaling/Flipping/Aligning/Colour Picker/Slider
+    - Roll wrist / Rotate Arm
+
+### Layers
+
+Each layer <=> a modifier application
+- Keyboard map includes transparent keycodes (arrow down)
+- Right toggle_T:
+    - Right shift when held
+    - T when tapped
+
+
+### Dead Keys
+
+- ``` => ``` + `a` => accented a
+- ``` => ``` + `e` => accented e

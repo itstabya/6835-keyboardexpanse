@@ -7,7 +7,7 @@ SELECT_ALL = "ctrl(a)"
 JUMP_TO_TOP = "ctrl(l)"
 MOVE_LEFT = "left"
 MOVE_RIGHT = "right"
-CHANGE_WINDOWS = "alt(tab)"
+CHANGE_WINDOWS = "alt(esc)"
 
 BACKSPACE = "backspace"
 
