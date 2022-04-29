@@ -1,11 +1,28 @@
 import cv2
 import numpy as np
-
+from threading import Timer
 
 def resize(img, height=800):
     rat = height / img.shape[0]
     return cv2.resize(img, (int(rat * img.shape[1]), height))
 
+
+def debounce(wait):
+    """ Decorator that will postpone a functions
+        execution until after wait seconds
+        have elapsed since the last time it was invoked. """
+    def decorator(fn):
+        def debounced(*args, **kwargs):
+            def call_it():
+                fn(*args, **kwargs)
+            try:
+                debounced.t.cancel()
+            except(AttributeError):
+                pass
+            debounced.t = Timer(wait, call_it)
+            debounced.t.start()
+        return debounced
+    return decorator
 
 def condenseToNPoints(pts, N=4):
     # Find the N closest pairs
