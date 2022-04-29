@@ -1,10 +1,10 @@
 swipes:
   - name: "Next Desktop"
     detection: "e+r+t"
-    command: "control(alt(right))"
+    command: "control(right)"
   - name: "Previous Desktop"
     detection: "o+i+u"
-    command: "control(alt(left))"
+    command: "control(left)"
   - name: "Next Window"
     detection: "s+d+f"
     command: "alt(tab)"
@@ -63,10 +63,10 @@ hands:
     action: "SelectAll"
   - name: "Thumbless pointing"
     position:
-      left: "URCCC"
+      left: "CRRRC"
       right: "XXXXX"
     action: "JumpUp"
   - name: "Pinky"
     position:
-      mirror: "RRRRU"
-    action: "NotImplemented"
+      mirror: "XRRRU"
+    action: "NewWindow"

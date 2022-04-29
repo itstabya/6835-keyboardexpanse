@@ -82,7 +82,7 @@ class Interceptor:
             if swipe["detection"] in characters:
                 print(f"===> {swipe['name']}")
                 spam_count = len(characters.replace("+", ""))
-                self.send_key_combination(", ".join([BACKSPACE] * spam_count))
+                self.send_key_combination(" ".join([BACKSPACE] * spam_count))
                 self.send_key_combination(swipe["command"])
                 self.recent.clear()
                 break

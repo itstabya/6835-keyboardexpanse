@@ -8,6 +8,7 @@ from keyboardexpanse.keyboard.hotkeys import (
     SELECT_ALL,
     SELECT_LEFT,
     SELECT_RIGHT,
+    NEW_WINDOW
 )
 from keyboardexpanse.oslayer.config import CONFIG_PATH
 from screeninfo import get_monitors
@@ -40,6 +41,7 @@ KNOWN_ACTIONS = {
     "SelectAll": lambda ha, _: ha._send_key_command(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command(JUMP_TO_TOP),
     "TabOnThumb": lambda ha, hand: ha._tap_command(hand, 0, CHANGE_WINDOWS),
+    "NewWindow": lambda ha, _: ha._send_key_command(NEW_WINDOW),
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
