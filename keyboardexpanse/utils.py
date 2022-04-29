@@ -1,3 +1,4 @@
+import time
 import cv2
 import numpy as np
 from threading import Timer
@@ -6,6 +7,22 @@ def resize(img, height=800):
     rat = height / img.shape[0]
     return cv2.resize(img, (int(rat * img.shape[1]), height))
 
+
+def one_per(s):
+    """Decorator ensures function that can only be called once every `s` seconds.
+    """
+    def decorate(f):
+        t = None
+
+        def wrapped(*args, **kwargs):
+            nonlocal t
+            t_ = time.time()
+            if t is None or t_ - t >= s:
+                result = f(*args, **kwargs)
+                t = time.time()
+                return result
+        return wrapped
+    return decorate
 
 def debounce(wait):
     """ Decorator that will postpone a functions

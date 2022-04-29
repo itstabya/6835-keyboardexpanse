@@ -18,7 +18,7 @@ import yaml
 
 from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.hands.landmarks import HandLandmark
-from keyboardexpanse.utils import debounce
+from keyboardexpanse.utils import debounce, one_per
 
 from .detector import (
     CLENCHED_POSITION,
@@ -152,7 +152,7 @@ class HandAnalysis:
     #     self.prev[fingerIndex] = wigglePos
 
 
-    @debounce(.5)
+    @one_per(.5)
     def _send_key_command_once(self, command):
         self._send_key_command(command)
     
