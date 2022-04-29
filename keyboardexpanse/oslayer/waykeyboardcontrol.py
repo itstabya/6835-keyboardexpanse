@@ -14,6 +14,7 @@ def to_keyboard_shortcut(key_command: str) -> str:
         .replace("super_r", "windows")
         .replace("super", "windows")
     )
+    key_command = key_command.replace(" ", ", ")
     return key_command.replace("(", "+").replace(")", "")
 
 

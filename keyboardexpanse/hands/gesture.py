@@ -18,6 +18,7 @@ import yaml
 
 from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.hands.landmarks import HandLandmark
+from keyboardexpanse.utils import debounce
 
 from .detector import (
     CLENCHED_POSITION,
@@ -38,10 +39,9 @@ KNOWN_ACTIONS = {
     "MoveRight": lambda ha, _: ha._send_key_command(MOVE_RIGHT),
     "SelectLeft": lambda ha, _: ha._send_key_command(SELECT_LEFT),
     "SelectRight": lambda ha, _: ha._send_key_command(SELECT_RIGHT),
-    "SelectAll": lambda ha, _: ha._send_key_command(SELECT_ALL),
-    "JumpUp": lambda ha, _: ha._send_key_command(JUMP_TO_TOP),
-    "TabOnThumb": lambda ha, hand: ha._tap_command(hand, 0, CHANGE_WINDOWS),
-    "NewWindow": lambda ha, _: ha._send_key_command(NEW_WINDOW),
+    "SelectAll": lambda ha, _: ha._send_key_command_once(SELECT_ALL),
+    "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
+    "TabOnThumb": lambda ha, hand: ha._send_key_command_once(hand, 0, CHANGE_WINDOWS),
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
@@ -150,6 +150,11 @@ class HandAnalysis:
     #         self.relay.send_key_combination(command)
     #     self.prev[fingerIndex] = wigglePos
 
+
+    @debounce(.5)
+    def _send_key_command_once(self, command):
+        self._send_key_command(command)
+    
     def _send_key_command(self, command):
         self.relay.send_key_combination(command)
 
