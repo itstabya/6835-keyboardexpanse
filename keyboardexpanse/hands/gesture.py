@@ -8,7 +8,9 @@ from keyboardexpanse.keyboard.hotkeys import (
     SELECT_ALL,
     SELECT_LEFT,
     SELECT_RIGHT,
-    NEW_WINDOW
+    NEW_WINDOW,
+    CLOSE_WINDOW,
+    MINIMIZE,
 )
 from keyboardexpanse.oslayer.config import CONFIG_PATH
 from screeninfo import get_monitors
@@ -41,8 +43,9 @@ KNOWN_ACTIONS = {
     "SelectRight": lambda ha, _: ha._send_key_command(SELECT_RIGHT),
     "SelectAll": lambda ha, _: ha._send_key_command_once(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
-    "TabOnThumb": lambda ha, hand: ha._send_key_command_once(hand, 0, CHANGE_WINDOWS),
-    "NewWindow": lambda ha, hannd: ha._send_key_command_once(NEW_WINDOW), 
+    "Minimize": lambda ha, hand: ha._tap_command(hand, 0, MINIMIZE, CLENCHED_POSITION),
+    "NewWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 1, NEW_WINDOW, UP_POSITION), 
+    # "CloseWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 2, CLOSE_WINDOW, UP_POSITION), 
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
@@ -139,9 +142,10 @@ class HandAnalysis:
             # )
             autopy.mouse.click()
 
-    def _tap_command(self, handness, fingerIndex, command):
+    # @one_per(.5)
+    def _tap_command(self, handness, fingerIndex, command, expected_pos):
         wigglePos = self.finger_classes[handness.index][fingerIndex]
-        if wigglePos == CLENCHED_POSITION and self.prev[fingerIndex] != wigglePos:
+        if wigglePos == expected_pos and self.prev[fingerIndex] != wigglePos:
             self.relay.send_key_combination(command)
         self.prev[fingerIndex] = wigglePos
 
@@ -162,12 +166,15 @@ class HandAnalysis:
     def step(self, img, pTime, cTime, frameCount):
         self.detector.process(img)
         self._classify_hands(img)
-
+        # for handness in (Handness.LeftHand, Handness.RightHand):
+        #   if handness == Handness.RightHand:
+            # print("Hand position: ", self.finger_classes[handness.index], handness)
         for gesture in self.config["hands"]:
             action = KNOWN_ACTIONS.get(gesture["action"], print)
             if "mirror" in gesture["position"]:
                 hand_string = gesture["position"]["mirror"]
                 for handness in (Handness.LeftHand, Handness.RightHand):
+                
                     if compare_positions(
                         hand_string, self.finger_classes[handness.index]
                     ):

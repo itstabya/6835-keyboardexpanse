@@ -1,10 +1,10 @@
 swipes:
   - name: "Next Desktop"
     detection: "e+r+t"
-    command: "control(right)"
+    command: "control(left)"
   - name: "Previous Desktop"
     detection: "o+i+u"
-    command: "control(left)"
+    command: "control(right)"
   - name: "Next Window"
     detection: "s+d+f"
     command: "alt(tab)"
@@ -35,7 +35,7 @@ hands:
   - name: "Flat Rock Star"
     position:
       mirror: "XRCCR"
-    action: "TabOnThumb"
+    action: "Minimize"
   - name: "Left Thumb Out"
     position:
       left:  "UCCCC"
@@ -61,12 +61,18 @@ hands:
       left: "URCCC"
       right: "URCCC"
     action: "SelectAll"
-  - name: "Thumbless pointing"
+  - name: "Three up"
     position:
-      left: "CRRRC"
+      left: "CRRRU"
       right: "XXXXX"
     action: "JumpUp"
-  - name: "Pinky"
+  - name: "New+Index"
     position:
-      mirror: "XRRRU"
+      left: "CRRRR"
+      right: "XXXXX"
     action: "NewWindow"
+  - name: "New+Middle"
+    position:
+      left: "CRRRR"
+      right: "XXXXX"
+    action: "CloseWindow"
