@@ -18,8 +18,8 @@ wCam, hCam = None, None
 MAX_FRAME_RATE = 20
 
 # CHANGE ME
-WEBCAM_NUMBER = 0
-IS_MIRRORED_DOWN = True
+WEBCAM_NUMBER = 1
+IS_MIRRORED_DOWN = False
 #########################
 
 
