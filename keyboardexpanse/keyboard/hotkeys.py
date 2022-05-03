@@ -15,6 +15,8 @@ CLOSE_WINDOW = "ctrl(w)"
 BACKSPACE = "backspace"
 MINIMIZE = "alt(space) enter"
 
+FIND_REPLACE_GOOGLE = "ctrl(h)"
+
 if PLATFORM == "mac":
     SELECT_ALL = SELECT_ALL.replace("ctrl", "command")
     JUMP_TO_TOP = JUMP_TO_TOP.replace("ctrl", "command")
@@ -22,5 +24,4 @@ if PLATFORM == "mac":
     CLOSE_WINDOW = CLOSE_WINDOW.replace("ctrl", "command")
     CHANGE_WINDOWS = "alt(tab)"
     MINIMIZE = "command(m)"
-    
-
+    FIND_REPLACE_GOOGLE = "command(shift(h))"

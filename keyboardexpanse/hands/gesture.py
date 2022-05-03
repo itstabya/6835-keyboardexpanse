@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import time
-from typing import Tuple
+from typing import Callable, Tuple
 import numpy as np
 from keyboardexpanse.keyboard.hotkeys import (
     CHANGE_WINDOWS,
+    FIND_REPLACE_GOOGLE,
     JUMP_TO_TOP,
     MOVE_LEFT,
     MOVE_RIGHT,
@@ -49,6 +50,9 @@ KNOWN_ACTIONS = {
     "Minimize": lambda ha, hand: ha._tap_command(hand, 0, MINIMIZE, CLENCHED_POSITION),
     "NewWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 1, NEW_WINDOW, UP_POSITION), 
     "CloseWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 2, CLOSE_WINDOW, UP_POSITION), 
+    # Google Docs
+    "FindAndReplace": lambda ha, _: ha._send_key_command_once(FIND_REPLACE_GOOGLE),
+    
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
@@ -86,6 +90,9 @@ class HandAnalysis:
 
     lastGesture = None
     lastGestureTime = None
+
+    # Contacts are last gestures created
+    contacts: "dict[str, Callable]" = field(default_factory=dict)
 
     def start(self):
         monitor = get_monitors()[0]
@@ -194,6 +201,9 @@ class HandAnalysis:
             transitionPair: Tuple[str, str] = (self.lastGesture, name)  # type: ignore
             delayTime = TRANSITION_DELAY_TABLE.get(transitionPair, DEFAULT_DELAY)  # type: ignore
             
+            if self.lastGesture is None:
+                self.lastGesture = name
+
             if self.lastGesture == name:
                 action(self, handness)
                 self.lastGestureTime = newGestureTime
@@ -205,27 +215,33 @@ class HandAnalysis:
                 self.lastGesture = name
                 return
             
-            
 
+        previousGesture = self.lastGesture
 
+        foundGesture = False
         for gesture in self.config["hands"]:
             action = KNOWN_ACTIONS.get(gesture["action"], lambda _ha, _h: print(f"Unknown action: {gesture['action']}"))
             
+            position = gesture.get("position", {})
             # Symmetrical gestures
-            if "mirror" in gesture["position"]:
-                hand_string = gesture["position"]["mirror"]
+            if "mirror" in position:
+                hand_string = position["mirror"]
                 for handness in (Handness.LeftHand, Handness.RightHand):
                 
                     if compare_positions(
                         hand_string, self.finger_classes[handness.index]
                     ):
-                        print(f"[{self.frameCounter}] !{handness} {gesture['name']}")
+                        print(f"[{self.frameCounter}] {handness.shorthand} {gesture['name']}")
                         apply_action_if_not_within_delay_zone(gesture['name'], action, handness)
-            
+                        foundGesture = True
+                        break
+                if foundGesture:
+                    break
+                
             # Dual Hand Gestures
-            if "left" in gesture["position"] and "right" in gesture["position"]:
-                lhand_str = gesture["position"]["left"]
-                rhand_str = gesture["position"]["right"]
+            if "left" in position and "right" in position:
+                lhand_str = position["left"]
+                rhand_str = position["right"]
                 matching_left = compare_positions(
                     lhand_str, self.finger_classes[Handness.LeftHand.index]
                 )
@@ -235,6 +251,37 @@ class HandAnalysis:
                 if matching_left and matching_right:
                     print(f"[{self.frameCounter}] ! {gesture['name']}")
                     apply_action_if_not_within_delay_zone(gesture['name'], action, None)
+                    foundGesture = True
+                    break
+
+            # Tap Motion
+            tap = gesture.get('tap', {})
+            if "left" in tap and "right" in tap:
+                lhand_index = tap["left"].index("O")
+                rhand_index = tap["right"].index("O")
+                length, img, _ = self.detector.find2HandDistance(
+                    Handness.LeftHand,
+                    TIPS[lhand_index],
+                    Handness.RightHand,
+                    TIPS[rhand_index],
+                    img,
+                )
+
+                if length < tap["threshold"]:
+                    print(f"[{self.frameCounter}] ! {gesture['name']} - {length:.3f}")
+                    name = gesture["name"]
+                    self.lastGesture = name
+                    self.contacts[name] = lambda: apply_action_if_not_within_delay_zone(gesture['name'], action, None)
+                    foundGesture = True
+                    break
+
+
+        # Check for falling edge gestures
+        for contact in list(self.contacts):
+            if contact != self.lastGesture or not foundGesture:
+                if previousGesture == contact:
+                    self.contacts[contact]()
+                self.contacts.pop(contact, None)
 
         # # Measure distance
         # # length, img, lineInfo = self.detector.find2HandDistance(

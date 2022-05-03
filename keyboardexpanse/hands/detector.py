@@ -25,6 +25,11 @@ class Handness(enum.Enum):
             return (0, 0, 255)  # Blue
         return (0, 128, 0)  # Green
 
+    @property
+    def shorthand(self):
+        if self.value == "Right":
+            return "R"
+        return "L"
 
 class Axis(enum.IntEnum):
     X = 0

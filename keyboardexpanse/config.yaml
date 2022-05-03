@@ -1,3 +1,7 @@
+global:
+  arrow_sensitivity: 1
+  web_cam_number: 1
+  flipped_camera: true
 swipes:
   - name: "Next Desktop"
     detection: "e+r+t"
@@ -12,6 +16,12 @@ swipes:
     detection: "v+f"
     command: "super(up)"
 hands:
+  - name: ">.<"
+    tap:
+      left: "XOXXX"
+      right: "XOXXX"
+      threshold: .2
+    action: "FindAndReplace"
   - name: "Point"
     position:
       mirror: "CUCCC"
@@ -35,7 +45,7 @@ hands:
   - name: "Flat Rock Star"
     position:
       mirror: "XRCCR"
-    action: "Minimize"
+    action: "ChangeWindow"
   - name: "Left Thumb Out"
     position:
       left:  "UCCCC"
