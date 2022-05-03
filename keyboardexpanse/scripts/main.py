@@ -15,11 +15,11 @@ from keyboardexpanse.utils import apply_overlay
 
 ##########################
 wCam, hCam = None, None
-FRAME_RATE_DELAY = 0
+MAX_FRAME_RATE = 20
 
 # CHANGE ME
-WEBCAM_NUMBER = 1
-IS_MIRRORED_DOWN = False
+WEBCAM_NUMBER = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
@@ -87,7 +87,7 @@ def main():
     # def set_reference_point(event, x, y, _, _x):
     #     global ref_point
     #     if event == cv2.EVENT_LBUTTONDOWN:
-    #         print("Setting reference point", x, 500 - y)
+    #         # print("Setting reference point", x, 500 - y)
     #         ref_point = np.array([x, 500 - y])
     # cv2.setMouseCallback(KEYBOARD_WINDOW, set_reference_point)
 
@@ -118,24 +118,26 @@ def main():
             # img = apply_overlay(img, trackpad_camspace, color=(255, 0, 0))
 
             # 11. Frame Rate
+            img = handAnalyser.step(img)
+
+            deltaT = time.time() - pTime
+            fr_period = 1 / (MAX_FRAME_RATE + 1)
+            if deltaT < fr_period:
+                time.sleep(fr_period - deltaT)
+
             cTime = time.time()
             frameCount += 1
-            img = handAnalyser.step(img, pTime, cTime, frameCount)
-
             fps = 1 / (cTime - pTime)
 
-            if (cTime - pTime) < FRAME_RATE_DELAY:
-                time.sleep(FRAME_RATE_DELAY - (cTime - pTime))
-
-            pTime = cTime
+            pTime = time.time()
             cv2.putText(
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
 
-            keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
+            # keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
             # 12. Display
-            cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
+            # cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
             cv2.waitKey(1)
 
