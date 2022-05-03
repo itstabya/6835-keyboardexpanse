@@ -1,8 +1,8 @@
 from keyboardexpanse.oslayer.config import PLATFORM
 
 
-SELECT_LEFT = "shift(left left)"
-SELECT_RIGHT = "shift(right right)"
+SELECT_LEFT = "shift(option(left))"
+SELECT_RIGHT = "shift(option(right))"
 SELECT_ALL = "ctrl(a)"
 JUMP_TO_TOP = "ctrl(l)"
 MOVE_LEFT = "left left left"
