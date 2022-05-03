@@ -1,23 +1,26 @@
 from keyboardexpanse.oslayer.config import PLATFORM
 
 
-SELECT_LEFT = "shift(left left)"
-SELECT_RIGHT = "shift(right right)"
+REPEAT_CONST = 3
+
+MOVE_LEFT = f"{' '.join(['left'] * REPEAT_CONST)}"
+MOVE_RIGHT = f"{' '.join(['right'] * REPEAT_CONST)}"
+SELECT_LEFT = f"shift({MOVE_LEFT})"
+SELECT_RIGHT = f"shift({MOVE_RIGHT})"
 SELECT_ALL = "ctrl(a)"
 JUMP_TO_TOP = "ctrl(l)"
-MOVE_LEFT = "left left left"
-MOVE_RIGHT = "right right right "
 CHANGE_WINDOWS = "alt(esc)"
 NEW_WINDOW = "ctrl(n)"
 CLOSE_WINDOW = "ctrl(w)"
 BACKSPACE = "backspace"
-MINIMIZE = "ctrl(m)"
+MINIMIZE = "alt(space) enter"
+
 if PLATFORM == "mac":
     SELECT_ALL = SELECT_ALL.replace("ctrl", "command")
     JUMP_TO_TOP = JUMP_TO_TOP.replace("ctrl", "command")
     NEW_WINDOW = NEW_WINDOW.replace("ctrl", "command")
     CLOSE_WINDOW = CLOSE_WINDOW.replace("ctrl", "command")
     CHANGE_WINDOWS = "alt(tab)"
-    MINIMIZE = MINIMIZE.replace("ctrl", "command")
+    MINIMIZE = "command(m)"
     
 

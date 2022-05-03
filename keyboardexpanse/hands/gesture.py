@@ -45,7 +45,7 @@ KNOWN_ACTIONS = {
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
     "Minimize": lambda ha, hand: ha._tap_command(hand, 0, MINIMIZE, CLENCHED_POSITION),
     "NewWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 1, NEW_WINDOW, UP_POSITION), 
-    # "CloseWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 2, CLOSE_WINDOW, UP_POSITION), 
+    "CloseWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 2, CLOSE_WINDOW, UP_POSITION), 
     # Utils
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
@@ -66,6 +66,8 @@ class HandAnalysis:
     smoothening = 2
     plocX, plocY = 0, 0  # previous location X, previous location Y
     prev = ["X"] * 5
+
+    frameCounter = 0
 
     def start(self):
         monitor = get_monitors()[0]
@@ -142,7 +144,7 @@ class HandAnalysis:
             # )
             autopy.mouse.click()
 
-    # @one_per(.5)
+    @one_per(.01)
     def _tap_command(self, handness, fingerIndex, command, expected_pos):
         wigglePos = self.finger_classes[handness.index][fingerIndex]
         if wigglePos == expected_pos and self.prev[fingerIndex] != wigglePos:
@@ -163,14 +165,16 @@ class HandAnalysis:
     def _send_key_command(self, command):
         self.relay.send_key_combination(command)
 
-    def step(self, img, pTime, cTime, frameCount):
+    def step(self, img):
+        self.frameCounter += 1
         self.detector.process(img)
         self._classify_hands(img)
-        # for handness in (Handness.LeftHand, Handness.RightHand):
-        #   if handness == Handness.RightHand:
-            # print("Hand position: ", self.finger_classes[handness.index], handness)
+
+
         for gesture in self.config["hands"]:
-            action = KNOWN_ACTIONS.get(gesture["action"], print)
+            action = KNOWN_ACTIONS.get(gesture["action"], lambda _ha, _h: print(f"Unknown action: {gesture['action']}"))
+            
+            # Symmetrical gestures
             if "mirror" in gesture["position"]:
                 hand_string = gesture["position"]["mirror"]
                 for handness in (Handness.LeftHand, Handness.RightHand):
@@ -178,8 +182,10 @@ class HandAnalysis:
                     if compare_positions(
                         hand_string, self.finger_classes[handness.index]
                     ):
-                        print(f"! {gesture['name']}")
+                        print(f"[{self.frameCounter}] !{handness} {gesture['name']}")
                         action(self, handness)
+            
+            # Dual Hand Gestures
             if "left" in gesture["position"] and "right" in gesture["position"]:
                 lhand_str = gesture["position"]["left"]
                 rhand_str = gesture["position"]["right"]
@@ -190,7 +196,7 @@ class HandAnalysis:
                     rhand_str, self.finger_classes[Handness.RightHand.index]
                 )
                 if matching_left and matching_right:
-                    print(f"! {gesture['name']}")
+                    print(f"[{self.frameCounter}] ! {gesture['name']}")
                     action(self, None)
 
         # # Measure distance
@@ -217,7 +223,7 @@ class HandAnalysis:
         # if (left_openness == ONLY_THUMBS) and (right_openness == ONLY_THUMBS):
         #     pass
         # elif left_openness == ONLY_THUMBS and right_openness == ALL_CLOSED:
-        #     print(upness, openness)
+        #     # print(upness, openness)
         #     self.relay.send_key_combination(MOVE_RIGHT)
         # elif right_openness == ONLY_THUMBS and left_openness == ALL_CLOSED:
         #     self.relay.send_key_combination(MOVE_LEFT)

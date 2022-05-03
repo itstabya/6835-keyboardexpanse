@@ -69,10 +69,10 @@ hands:
   - name: "New+Index"
     position:
       left: "CRRRR"
-      right: "XXXXX"
+      right: "CXXXX"
     action: "NewWindow"
   - name: "New+Middle"
     position:
       left: "CRRRR"
-      right: "XXXXX"
+      right: "CXXXX"
     action: "CloseWindow"
