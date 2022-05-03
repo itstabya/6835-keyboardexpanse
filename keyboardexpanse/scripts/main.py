@@ -15,7 +15,7 @@ from keyboardexpanse.utils import apply_overlay
 
 ##########################
 wCam, hCam = None, None
-MAX_FRAME_RATE = 10 + 1
+MAX_FRAME_RATE = 20
 
 # CHANGE ME
 WEBCAM_NUMBER = 0
@@ -121,8 +121,9 @@ def main():
             img = handAnalyser.step(img)
 
             deltaT = time.time() - pTime
-            if deltaT < 1 / MAX_FRAME_RATE:
-                time.sleep((1 / MAX_FRAME_RATE) - deltaT)
+            fr_period = 1 / (MAX_FRAME_RATE + 1)
+            if deltaT < fr_period:
+                time.sleep(fr_period - deltaT)
 
             cTime = time.time()
             frameCount += 1
@@ -133,7 +134,7 @@ def main():
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
 
-            keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
+            # keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
             # 12. Display
             # cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
