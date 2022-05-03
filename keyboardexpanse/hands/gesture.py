@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import time
+from typing import Tuple
 import numpy as np
 from keyboardexpanse.keyboard.hotkeys import (
     CHANGE_WINDOWS,
@@ -43,6 +45,7 @@ KNOWN_ACTIONS = {
     "SelectRight": lambda ha, _: ha._send_key_command(SELECT_RIGHT),
     "SelectAll": lambda ha, _: ha._send_key_command_once(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
+    "ChangeWindow": lambda ha, _: ha._send_key_command_once(CHANGE_WINDOWS),
     "Minimize": lambda ha, hand: ha._tap_command(hand, 0, MINIMIZE, CLENCHED_POSITION),
     "NewWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 1, NEW_WINDOW, UP_POSITION), 
     "CloseWindow": lambda ha, _: ha._tap_command(Handness.RightHand, 2, CLOSE_WINDOW, UP_POSITION), 
@@ -50,6 +53,18 @@ KNOWN_ACTIONS = {
     "NotImplemented": lambda ha, _: print("NotImplemented"),
 }
 
+DEFAULT_DELAY = 1e9
+LEFT_RIGHT_DELAY = 1e3
+MOVE_DELAY = 1e4
+
+TRANSITION_DELAY_TABLE = {
+    ("MoveLeft", "MoveRight"): LEFT_RIGHT_DELAY,
+    ("MoveRight", "MoveLeft"): LEFT_RIGHT_DELAY,
+    ("SelectRight", "SelectLeft"): LEFT_RIGHT_DELAY,
+    ("SelectLeft", "SelectRight"): LEFT_RIGHT_DELAY,
+    ("MoveCursorByIndex", "MoveCursorByIndexTwo"): MOVE_DELAY,
+    ("MoveCursorByIndexTwo", "MoveCursorByIndex"): MOVE_DELAY,
+}
 
 @dataclass
 class HandAnalysis:
@@ -68,6 +83,9 @@ class HandAnalysis:
     prev = ["X"] * 5
 
     frameCounter = 0
+
+    lastGesture = None
+    lastGestureTime = None
 
     def start(self):
         monitor = get_monitors()[0]
@@ -171,6 +189,17 @@ class HandAnalysis:
         self._classify_hands(img)
 
 
+        def apply_action_if_not_within_delay_zone(name, action, handness):
+            newGestureTime = time.time_ns()
+            transitionPair: Tuple[str, str] = (self.lastGesture, name)  # type: ignore
+            delayTime = TRANSITION_DELAY_TABLE.get(transitionPair, DEFAULT_DELAY)  # type: ignore
+            if self.lastGesture == name or (newGestureTime - (self.lastGestureTime or newGestureTime)) > delayTime:
+                action(self, handness)
+
+            self.lastGestureTime = newGestureTime
+            self.lastGesture = name      
+
+
         for gesture in self.config["hands"]:
             action = KNOWN_ACTIONS.get(gesture["action"], lambda _ha, _h: print(f"Unknown action: {gesture['action']}"))
             
@@ -183,7 +212,7 @@ class HandAnalysis:
                         hand_string, self.finger_classes[handness.index]
                     ):
                         print(f"[{self.frameCounter}] !{handness} {gesture['name']}")
-                        action(self, handness)
+                        apply_action_if_not_within_delay_zone(gesture['name'], action, handness)
             
             # Dual Hand Gestures
             if "left" in gesture["position"] and "right" in gesture["position"]:
@@ -197,7 +226,7 @@ class HandAnalysis:
                 )
                 if matching_left and matching_right:
                     print(f"[{self.frameCounter}] ! {gesture['name']}")
-                    action(self, None)
+                    apply_action_if_not_within_delay_zone(gesture['name'], action, None)
 
         # # Measure distance
         # # length, img, lineInfo = self.detector.find2HandDistance(
