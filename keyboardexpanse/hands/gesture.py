@@ -193,11 +193,19 @@ class HandAnalysis:
             newGestureTime = time.time_ns()
             transitionPair: Tuple[str, str] = (self.lastGesture, name)  # type: ignore
             delayTime = TRANSITION_DELAY_TABLE.get(transitionPair, DEFAULT_DELAY)  # type: ignore
-            if self.lastGesture == name or (newGestureTime - (self.lastGestureTime or newGestureTime)) > delayTime:
+            
+            if self.lastGesture == name:
                 action(self, handness)
+                self.lastGestureTime = newGestureTime
+                return
 
-            self.lastGestureTime = newGestureTime
-            self.lastGesture = name      
+            if (newGestureTime - (self.lastGestureTime or newGestureTime)) > delayTime:
+                action(self, handness)
+                self.lastGestureTime = newGestureTime
+                self.lastGesture = name
+                return
+            
+            
 
 
         for gesture in self.config["hands"]:
