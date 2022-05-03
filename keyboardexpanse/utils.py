@@ -3,14 +3,15 @@ import cv2
 import numpy as np
 from threading import Timer
 
+
 def resize(img, height=800):
     rat = height / img.shape[0]
     return cv2.resize(img, (int(rat * img.shape[1]), height))
 
 
 def one_per(s):
-    """Decorator ensures function that can only be called once every `s` seconds.
-    """
+    """Decorator ensures function that can only be called once every `s` seconds."""
+
     def decorate(f):
         t = None
 
@@ -21,25 +22,33 @@ def one_per(s):
                 result = f(*args, **kwargs)
                 t = time.time()
                 return result
+
         return wrapped
+
     return decorate
 
+
 def debounce(wait):
-    """ Decorator that will postpone a functions
-        execution until after wait seconds
-        have elapsed since the last time it was invoked. """
+    """Decorator that will postpone a functions
+    execution until after wait seconds
+    have elapsed since the last time it was invoked."""
+
     def decorator(fn):
         def debounced(*args, **kwargs):
             def call_it():
                 fn(*args, **kwargs)
+
             try:
                 debounced.t.cancel()
-            except(AttributeError):
+            except (AttributeError):
                 pass
             debounced.t = Timer(wait, call_it)
             debounced.t.start()
+
         return debounced
+
     return decorator
+
 
 def condenseToNPoints(pts, N=4):
     # Find the N closest pairs

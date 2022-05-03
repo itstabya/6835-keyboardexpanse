@@ -20,7 +20,7 @@ hands:
     tap:
       left: "XOXXX"
       right: "XOXXX"
-      threshold: .2
+      threshold: .05
     action: "FindAndReplace"
   - name: "Point"
     position:

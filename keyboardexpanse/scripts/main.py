@@ -69,6 +69,11 @@ def main():
     cap = cv2.VideoCapture(WEBCAM_NUMBER)
     _, img = cap.read()
     wCam, hCam, _ = img.shape
+
+    writer = cv2.VideoWriter(
+        "last_run.mp4", cv2.VideoWriter_fourcc(*"mp4v"), MAX_FRAME_RATE, (hCam, wCam)
+    )
+
     handDetector = detector.HandDetector(maxHands=2)
     handAnalyser = HandAnalysis(detector=handDetector, wCam=wCam, hCam=hCam, relay=r)
     handAnalyser.start()
@@ -134,18 +139,28 @@ def main():
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
 
+
+            charWidth = len(handAnalyser.lastGesture or "") * 10
+            cv2.putText(
+                img, handAnalyser.lastGesture, (wCam - charWidth, 50), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2
+            )
+
             # keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
             # 12. Display
             # cv2.imshow(KEYBOARD_WINDOW, keyboard_view)
             cv2.imshow(ANNOTATED_WEBCAM_WINDOW, img)
+
+            writer.write(img)
             cv2.waitKey(1)
 
     except KeyboardInterrupt:
+        print("Cleaning up...")
         pass
 
     # After the loop release the cap object
     cap.release()
+    writer.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
 
