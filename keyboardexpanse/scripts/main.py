@@ -18,13 +18,14 @@ wCam, hCam = None, None
 MAX_FRAME_RATE = 20
 
 # CHANGE ME
-WEBCAM_NUMBER = 1
-IS_MIRRORED_DOWN = False
+WEBCAM_NUMBER = 0
+IS_MIRRORED_DOWN = True
 #########################
 
 
 def simulate_on_move(x, y):
     # pyautogui.moveTo(x, y)
+    print(f"Moving {x} {y}")
     autopy.mouse.move(x, y)
 
 
@@ -122,9 +123,11 @@ def main():
             # img = apply_overlay(img, keyboard_buttons_camspace)
             # img = apply_overlay(img, trackpad_camspace, color=(255, 0, 0))
 
-            # 11. Frame Rate
-            img = handAnalyser.step(img)
+            
+            img = handAnalyser.step(img, annotated=True)
 
+
+            # 11. Frame Rate
             deltaT = time.time() - pTime
             fr_period = 1 / (MAX_FRAME_RATE + 1)
             if deltaT < fr_period:

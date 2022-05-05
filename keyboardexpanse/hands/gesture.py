@@ -35,6 +35,9 @@ from .detector import (
     compare_positions,
 )
 
+def noop(_ha, _hand):
+    print("NotImplemented")
+
 KNOWN_ACTIONS = {
     # Move Cursor
     "MoveCursorByIndex": lambda ha, hand: ha._move_cursor_by_index(hand),
@@ -44,7 +47,7 @@ KNOWN_ACTIONS = {
     "MoveRight": lambda ha, _: ha._send_key_command(MOVE_RIGHT),
     "SelectLeft": lambda ha, _: ha._send_key_command(SELECT_LEFT),
     "SelectRight": lambda ha, _: ha._send_key_command(SELECT_RIGHT),
-    "SelectAll": lambda ha, _: ha._send_key_command_once(SELECT_ALL),
+    "SelectAll": noop, # lambda ha, _: ha._send_key_command_once(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
     # Window Commands
     "ChangeWindow": lambda ha, _: ha._send_key_command_once(CHANGE_WINDOWS),
@@ -60,7 +63,7 @@ KNOWN_ACTIONS = {
     # Google Docs
     "FindAndReplace": lambda ha, _: ha._send_key_command_once(FIND_REPLACE_GOOGLE),
     # Utils
-    "NotImplemented": lambda ha, _: print("NotImplemented"),
+    "NotImplemented": noop,
 }
 
 DEFAULT_DELAY = 1e9
@@ -196,10 +199,10 @@ class HandAnalysis:
     def _send_key_command(self, command):
         self.relay.send_key_combination(command)
 
-    def step(self, img):
+    def step(self, img, annotated=True):
         self.frameCounter += 1
-        self.detector.process(img)
-        self._classify_hands(img)
+        self.detector.process(img, draw=annotated)
+        self._classify_hands(img, annotated=annotated)
 
         def apply_action_if_not_within_delay_zone(name, action, handness):
             newGestureTime = time.time_ns()
