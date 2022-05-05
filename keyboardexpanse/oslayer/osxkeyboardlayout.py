@@ -5,21 +5,20 @@
 # <https://github.com/willwade/PyUserInput/blob/master/pykeyboard/mac_keycode.py>
 # <https://stackoverflow.com/questions/1918841/how-to-convert-ascii-character-to-cgkeycode>
 
-from threading import Thread
 import ctypes
 import ctypes.util
 import re
 import struct
 import unicodedata
+from threading import Thread
 
-from PyObjCTools import AppHelper
 import AppKit
 import Foundation
+from PyObjCTools import AppHelper
 
 from keyboardexpanse import log
 from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.misc import popcount_8
-
 
 carbon_path = ctypes.util.find_library("Carbon")
 carbon = ctypes.cdll.LoadLibrary(carbon_path)

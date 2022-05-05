@@ -1,6 +1,5 @@
 from keyboardexpanse.oslayer.config import PLATFORM
 
-
 REPEAT_CONST = 3
 
 MOVE_LEFT = f"{' '.join(['left'] * REPEAT_CONST)}"

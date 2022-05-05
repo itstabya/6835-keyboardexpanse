@@ -1,14 +1,16 @@
-from dataclasses import dataclass
-from datetime import timedelta
 import datetime
 import os
 import time
+from dataclasses import dataclass
+from datetime import timedelta
+
+import yaml
+
 from keyboardexpanse.keyboard.hotkeys import BACKSPACE
 from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME
 from keyboardexpanse.keyboard.window import Window
-from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
-import yaml
 from keyboardexpanse.oslayer.config import CONFIG_PATH, PLATFORM
+from keyboardexpanse.oslayer.keyboardcontrol import KeyboardCapture, KeyboardEmulation
 
 
 class Interceptor:

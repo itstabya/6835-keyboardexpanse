@@ -1,7 +1,3 @@
-global:
-  arrow_sensitivity: 1
-  web_cam_number: 1
-  flipped_camera: true
 swipes:
   - name: "Next Desktop"
     detection: "e+r+t"
@@ -48,12 +44,12 @@ hands:
     action: "ChangeWindow"
   - name: "Left Thumb Out"
     position:
-      left:  "UCCCC"
+      left: "UCCCC"
       right: "CCCCC"
     action: "MoveRight"
   - name: "Right Thumb Out"
     position:
-      left:  "CCCCC"
+      left: "CCCCC"
       right: "UCCCC"
     action: "MoveLeft"
   - name: "Lefthanded L"

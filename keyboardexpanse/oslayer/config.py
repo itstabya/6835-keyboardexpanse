@@ -7,8 +7,6 @@ import os
 import sys
 
 import appdirs
-import pkg_resources
-
 
 DISPLAY_SERVER = None
 

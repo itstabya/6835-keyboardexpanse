@@ -1,8 +1,8 @@
-from multiprocessing import connection
-from threading import Thread
 import errno
 import os
 import tempfile
+from multiprocessing import connection
+from threading import Thread
 
 from keyboardexpanse import log
 from keyboardexpanse.oslayer.config import PLATFORM

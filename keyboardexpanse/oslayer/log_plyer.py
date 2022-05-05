@@ -1,11 +1,9 @@
-import os
 import logging
+import os
 
-from keyboardexpanse import notification
-
-from keyboardexpanse import log, __name__ as __software_name__
+from keyboardexpanse import __name__ as __software_name__
+from keyboardexpanse import log, notification
 from keyboardexpanse.oslayer.config import ASSETS_DIR, PLATFORM
-
 
 APPNAME = __software_name__.capitalize()
 

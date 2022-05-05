@@ -21,19 +21,18 @@ http://tronche.com/gui/x/xlib/input/keyboard-encoding.html
 
 """
 
-from functools import wraps
 import os
-import string
 import select
+import string
 import threading
+from functools import wraps
 
-from Xlib import X, XK, display
+from Xlib import XK, X, display
 from Xlib.ext import xinput, xtest
 from Xlib.ext.ge import GenericEventCode
 
-from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
 from keyboardexpanse import log
-
+from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
 
 # Enable support for media keys.
 XK.load_keysym_group("xf86")

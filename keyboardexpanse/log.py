@@ -3,16 +3,14 @@
 
 """A module to handle logging."""
 
+import logging
 import os
 import sys
-import logging
 import traceback
-
+from logging import INFO, WARNING
 from logging.handlers import RotatingFileHandler
-from logging import DEBUG, INFO, WARNING, ERROR
 
 from keyboardexpanse.oslayer.config import CONFIG_DIR, PLATFORM
-
 
 LOG_FORMAT = "%(asctime)s [%(threadName)s] %(levelname)s: %(message)s"
 LOG_FILENAME = os.path.realpath(os.path.join(CONFIG_DIR, "keyboardexpanse.log"))

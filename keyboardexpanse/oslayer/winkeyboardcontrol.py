@@ -13,7 +13,6 @@ emulate keyboard input.
 
 """
 
-from ctypes import windll, wintypes
 import atexit
 import ctypes
 import multiprocessing
@@ -21,12 +20,12 @@ import os
 import signal
 import threading
 import winreg
+from ctypes import windll, wintypes
 
-from keyboardexpanse.keyboard.key_combo import parse_key_combo
-from keyboardexpanse.oslayer.winkeyboardlayout import KeyboardLayout
 from keyboardexpanse import log
+from keyboardexpanse.keyboard.key_combo import parse_key_combo
 from keyboardexpanse.misc import to_surrogate_pair
-
+from keyboardexpanse.oslayer.winkeyboardlayout import KeyboardLayout
 
 # For the purposes of this class, we'll only report key presses that
 # result in these outputs in order to exclude special key combos.

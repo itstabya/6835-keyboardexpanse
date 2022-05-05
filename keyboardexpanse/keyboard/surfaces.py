@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
-import numpy as np
+
 import cv2
+import numpy as np
 
 from keyboardexpanse.utils import (
     condenseToNPoints,

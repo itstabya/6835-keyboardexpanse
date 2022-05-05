@@ -1,4 +1,3 @@
-import time
 from keyboardexpanse.keyboard.interceptor import Interceptor
 
 

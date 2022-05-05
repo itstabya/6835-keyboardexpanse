@@ -1,11 +1,12 @@
+import logging
+
 import objc
+
+from keyboardexpanse import log
 
 NSUserNotification = objc.lookUpClass("NSUserNotification")
 NSUserNotificationCenter = objc.lookUpClass("NSUserNotificationCenter")
 NSObject = objc.lookUpClass("NSObject")
-
-from keyboardexpanse import log, __name__ as __software_name__
-import logging
 
 
 class OSXNotificationHandler(logging.Handler):

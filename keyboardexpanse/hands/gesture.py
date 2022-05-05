@@ -1,42 +1,45 @@
-from dataclasses import dataclass, field
 import time
+from dataclasses import dataclass, field
 from typing import Callable, Tuple
+
+import autopy
+import cv2
 import numpy as np
+import yaml
+from screeninfo import get_monitors
+
+from keyboardexpanse.hands.landmarks import HandLandmark
 from keyboardexpanse.keyboard.hotkeys import (
     CHANGE_WINDOWS,
+    CLOSE_WINDOW,
     FIND_REPLACE_GOOGLE,
     JUMP_TO_TOP,
+    MINIMIZE,
     MOVE_LEFT,
     MOVE_RIGHT,
+    NEW_WINDOW,
     SELECT_ALL,
     SELECT_LEFT,
     SELECT_RIGHT,
-    NEW_WINDOW,
-    CLOSE_WINDOW,
-    MINIMIZE,
 )
-from keyboardexpanse.oslayer.config import CONFIG_PATH
-from screeninfo import get_monitors
-import cv2
-import autopy
-import yaml
-
 from keyboardexpanse.keyboard.interceptor import Interceptor
-from keyboardexpanse.hands.landmarks import HandLandmark
+from keyboardexpanse.oslayer.config import CONFIG_PATH
 from keyboardexpanse.utils import debounce, one_per
 
 from .detector import (
     CLENCHED_POSITION,
     TIPS,
     UP_POSITION,
+    Axis,
     HandDetector,
     Handness,
-    Axis,
     compare_positions,
 )
 
+
 def noop(_ha, _hand):
     print("NotImplemented")
+
 
 KNOWN_ACTIONS = {
     # Move Cursor
@@ -47,7 +50,7 @@ KNOWN_ACTIONS = {
     "MoveRight": lambda ha, _: ha._send_key_command(MOVE_RIGHT),
     "SelectLeft": lambda ha, _: ha._send_key_command(SELECT_LEFT),
     "SelectRight": lambda ha, _: ha._send_key_command(SELECT_RIGHT),
-    "SelectAll": noop, # lambda ha, _: ha._send_key_command_once(SELECT_ALL),
+    "SelectAll": noop,  # lambda ha, _: ha._send_key_command_once(SELECT_ALL),
     "JumpUp": lambda ha, _: ha._send_key_command_once(JUMP_TO_TOP),
     # Window Commands
     "ChangeWindow": lambda ha, _: ha._send_key_command_once(CHANGE_WINDOWS),
@@ -208,9 +211,9 @@ class HandAnalysis:
             newGestureTime = time.time_ns()
             transitionPair: Tuple[str, str] = (self.lastGesture, name)  # type: ignore
             delayTime = TRANSITION_DELAY_TABLE.get(transitionPair, DEFAULT_DELAY)  # type: ignore
-   
+
             if self.lastGesture is None:
-              self.lastGesture = name 
+                self.lastGesture = name
 
             if self.lastGesture == name:
                 action(self, handness)

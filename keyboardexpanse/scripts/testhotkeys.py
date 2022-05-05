@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import keyboard, time
+
+import keyboard
 
 keyboard.add_hotkey("ctrl+shift+a", print, args=("triggered", "hotkey"))
 

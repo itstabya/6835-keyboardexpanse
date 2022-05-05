@@ -2,7 +2,6 @@
 
 import re
 
-
 # Mapping of "standard" keynames (derived from X11 keysym names) to Unicode.
 KEYNAME_TO_CHAR = {
     # Generated using:

@@ -1,11 +1,11 @@
-import os
 import logging
+import os
 
 import dbus
 
-from keyboardexpanse import log, __name__ as __software_name__
+from keyboardexpanse import __name__ as __software_name__
+from keyboardexpanse import log
 from keyboardexpanse.oslayer.config import ASSETS_DIR
-
 
 APPNAME = __software_name__.capitalize()
 APPICON = os.path.join(ASSETS_DIR, "keyboardexpanse.png")

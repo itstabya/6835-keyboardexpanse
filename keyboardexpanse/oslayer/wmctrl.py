@@ -1,6 +1,5 @@
 from keyboardexpanse.oslayer.config import PLATFORM
 
-
 if PLATFORM == "win":
 
     from ctypes import windll, wintypes
@@ -19,9 +18,9 @@ if PLATFORM == "win":
 elif PLATFORM == "mac":
 
     from Cocoa import (
-        NSWorkspace,
-        NSRunningApplication,
         NSApplicationActivateIgnoringOtherApps,
+        NSRunningApplication,
+        NSWorkspace,
     )
 
     def GetForegroundWindow():

@@ -1,17 +1,18 @@
-import cv2
-import numpy as np
-import keyboardexpanse.hands.detector as detector
 import time
 
 import autopy
+import cv2
+import numpy as np
 from screeninfo import get_monitors
 
-# import pyautogui
-
+import keyboardexpanse.hands.detector as detector
 from keyboardexpanse.hands.gesture import HandAnalysis
 from keyboardexpanse.keyboard.interceptor import Interceptor
 from keyboardexpanse.keyboard.surfaces import DetectSurfaces
 from keyboardexpanse.utils import apply_overlay
+
+# import pyautogui
+
 
 ##########################
 wCam, hCam = None, None
@@ -123,9 +124,7 @@ def main():
             # img = apply_overlay(img, keyboard_buttons_camspace)
             # img = apply_overlay(img, trackpad_camspace, color=(255, 0, 0))
 
-            
             img = handAnalyser.step(img, annotated=True)
-
 
             # 11. Frame Rate
             deltaT = time.time() - pTime
@@ -142,10 +141,15 @@ def main():
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
 
-
             charWidth = len(handAnalyser.lastGesture or "") * 10
             cv2.putText(
-                img, handAnalyser.lastGesture, (wCam - charWidth, 50), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2
+                img,
+                handAnalyser.lastGesture,
+                (wCam - charWidth, 50),
+                cv2.FONT_HERSHEY_PLAIN,
+                2,
+                (255, 0, 0),
+                2,
             )
 
             # keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)

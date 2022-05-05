@@ -1,7 +1,8 @@
 import time
+from threading import Timer
+
 import cv2
 import numpy as np
-from threading import Timer
 
 
 def resize(img, height=800):

@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 
 profile.svg
+# Ignore any generated videos
+*.mp4
 
 # C extensions
 *.so

@@ -3,9 +3,11 @@
 """
 
 import sys
+
 import keyboard
-from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
+
 from keyboardexpanse import log
+from keyboardexpanse.keyboard.key_combo import add_modifiers_aliases, parse_key_combo
 
 
 def to_keyboard_shortcut(key_command: str) -> str:

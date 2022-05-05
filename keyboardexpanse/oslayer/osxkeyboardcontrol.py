@@ -1,18 +1,18 @@
 # coding: utf-8
 
 import threading
-from time import sleep
 from queue import Queue
+from time import sleep
 
 from Quartz import (
     CFMachPortCreateRunLoopSource,
     CFMachPortInvalidate,
+    CFRelease,
     CFRunLoopAddSource,
-    CFRunLoopSourceInvalidate,
     CFRunLoopGetCurrent,
     CFRunLoopRun,
+    CFRunLoopSourceInvalidate,
     CFRunLoopStop,
-    CFRelease,
     CGEventCreateKeyboardEvent,
     CGEventGetFlags,
     CGEventGetIntegerValueField,
@@ -23,6 +23,8 @@ from Quartz import (
     CGEventSourceCreate,
     CGEventTapCreate,
     CGEventTapEnable,
+    NSEvent,
+    NSSystemDefined,
     kCFRunLoopCommonModes,
     kCGEventFlagMaskAlternate,
     kCGEventFlagMaskCommand,
@@ -33,24 +35,21 @@ from Quartz import (
     kCGEventFlagMaskShift,
     kCGEventKeyDown,
     kCGEventKeyUp,
+    kCGEventSourceStateHIDSystemState,
     kCGEventTapDisabledByTimeout,
     kCGEventTapOptionDefault,
     kCGHeadInsertEventTap,
     kCGKeyboardEventKeycode,
     kCGSessionEventTap,
-    kCGEventSourceStateHIDSystemState,
-    NSEvent,
-    NSSystemDefined,
 )
 
 from keyboardexpanse import log
-from keyboardexpanse.oslayer.osxkeyboardlayout import KeyboardLayout
 from keyboardexpanse.keyboard.key_combo import (
+    KEYNAME_TO_CHAR,
     add_modifiers_aliases,
     parse_key_combo,
-    KEYNAME_TO_CHAR,
 )
-
+from keyboardexpanse.oslayer.osxkeyboardlayout import KeyboardLayout
 
 BACK_SPACE = 51
 

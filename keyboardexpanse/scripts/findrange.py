@@ -33,7 +33,6 @@ def pick_color(event, x, y, flags, param):
 
 
 def main():
-    import sys
 
     global image_hsv, pixel  # so we can use it in mouse callback
 

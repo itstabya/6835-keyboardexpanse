@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict, namedtuple
-from ctypes import windll, wintypes
 import codecs
 import ctypes
 import sys
+from collections import defaultdict, namedtuple
+from ctypes import windll, wintypes
 
 from keyboardexpanse.keyboard.key_combo import CHAR_TO_KEYNAME, add_modifiers_aliases
-from keyboardexpanse.oslayer.wmctrl import GetForegroundWindow
 from keyboardexpanse.misc import popcount_8
-
+from keyboardexpanse.oslayer.wmctrl import GetForegroundWindow
 
 GetKeyboardLayout = windll.user32.GetKeyboardLayout
 GetKeyboardLayout.argtypes = [
