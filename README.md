@@ -6,7 +6,7 @@
   <strong>Keyboard</strong> Expanse
 </h1>
 
-Switching back between the keyboard and mouse not only breaks you from the flow, but also wastes time. Keyboard shortcuts are great; but they’re also a pain to learn, require awkward control sequences.
+Switching back between the keyboard and mouse not only breaks you from the flow but also wastes time. Keyboard shortcuts are great, but they are also a pain to learn and require awkward control sequences.
 
 <div align="center">
 
@@ -17,9 +17,9 @@ Switching back between the keyboard and mouse not only breaks you from the flow,
 Keyboard Expanse is all about keeping your hands on your keyboard; but expanding the interactable surface from simple button presses.
 
 1. **Grounded Location**: Minimises gestural fatigue
-2. **Subtle Events**: No large, artificial movements required.
+2. **Subtle Events**: No large, artificial movements are required.
 3. **No "wake"-command**: Allows keyboard-shortcut level speed.
-4. **Concrete metaphors** related to real-world experiences: To go left you point left; to minimise you swipe the window away; to change desktop you move along the keyboard.
+4. **Concrete metaphors** related to real-world experiences: To go left - you point left; to minimise - you swipe the window away; to change desktop - you move along the keyboard.
 5. **Works alongside Keyboard Shortcuts**: Keyboard shortcuts still have a place in this system: Copy + Paste are both ubiquitous, well-known and have no quick facsimile in gestural space.
 
 ## :wrench: Technology
@@ -45,7 +45,7 @@ The physical setup is generally easy, you can either used a raised web-camera fa
 > 1. The 'bottom' of the screen should match up with the top row of keyboard.
 > 2. You should be able to see your wrists when you are typing on the bottom row of the screen.
 
-## Software
+### Software
 
 - Requires Python3.8 (due to autopy dependency), use pyenv to install custom version if necessary
 
@@ -70,10 +70,44 @@ python3 -m keyboardexpanse
 sudo -E env PATH=$PATH python3 -m keyboardexpanse
 ```
 
+## :+1: Default Gestures
+
+In priority order, visible in [config](./keyboardexpanse/config.yaml).
+
+1. `Index Finger Touch` (Touch two index fingers together): Find and Replace Shortcut
+2. `Point` (Clenched fist with index finger extended, on either hand): Move cursor with finger tip position
+3. `Peace` (Peace sign on either hand): Click when index and middle finger are together.
+4. `Flat Rock Star` (Middle and ring finger are clenched): Change Window (Alt+Esc) when thumb is clenched and released.
+5. `Left Thumb Out` (clenched right + left hand with left thumb extended): Tap right arrow key.
+6. `Right Thumb Out` (clenched right + left hand with right thumb extended): Tap left arrow key.
+7. `Lefthanded L` (clenched right + left hand with left index resting on keyboard and thumb extended): Continuously select characters to the right.
+8. `Righthanded L` (clenched right + left hand with right index resting on keyboard and thumb extended): Continuously select characters to the left.
+9. `Double L` (two L positions, see above): Select all
+10. `Three Up` (left hand points three fingers): Jump to navigation bar in Chrome
+11. `New+Index` (left hand has the thumb hidden with all the fingers resting, right hand has the thumb hidden, raise the index finger and return to rest): Create new window
+12. `New+Middle` (left hand has the thumb hidden with all the fingers resting, right hand has the thumb hidden, raise the middle finger and return to rest): Close Window
+
+Feel free to experiment and add your own gestures.
+
+## 🏗 Project structure
+
+| File or folder | Description                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| `config.yaml`  | Configuration for recognised gestures and the action to perform at that point |
+| `hands/detector.py`  | Applies the mediapipe landmark generation, and the classification to each finger (raised, clenched, resting) |
+| `hands/gesture.py`  | Handles customised gesture recognition and action triggering. `KNOWN_ACTIONS` are also located at the top of this file.|
+| `keyboard/hotkeys.py`  | Cross platform hotkeys for certain tasks. |
+| `keyboard/interceptor.py`  | Supresses native keyboard presses and optionally relays them. Also applies the swipe detection using a Rolling Window|
+| `keyboard/surfaces.py`  | Detects any keyboard surfaces in the screen using a variety of image processing techniques, provides cam space <-> keyboard space transforms. |
+| `keyboard/window.py`  | Simple rolling window implementation using time_ns |
+| `scripts/`  | The core entrypoints to keyboard expanse, some are used for testing. |
+| `oslayer/`  | Cross-platform interface for Keyboard Control, Logging, and Windows Control from [plover](https://github.com/openstenoproject/plover) |
+
+
 ## :sunglasses: Acknowledgments & Prior Work
 
-- The entire [oslayer](./keyboardexpanse/oslayer) is taken from [Plover](https://github.com/openstenoproject/plover) - the open source stenotype engine - (with some minor modifications).
-- The MediaPipe Library does much of the heavy lifting for gesture detection by providing Realtime Landmarks.
+- The entire [oslayer](./keyboardexpanse/oslayer) is from [Plover](https://github.com/openstenoproject/plover) - the open source stenotype engine - (with some minor modifications & patches visible via diff).
+- The MediaPipe Library does much of the heavy lifting for gesture detection by providing Real-time Hand Landmarks.
 - [Typealike](https://dl.acm.org/doi/10.1145/3486952), although we started this project without discovering Typealike (a very similar project in many ways!), the insights from the paper were invaluable - in particular use of a mirror to create the downward view was inspired.
 - [DownChord and UpChord](https://dl.acm.org/doi/10.1145/2948708.2948715)
 - [Métamorphe](https://hal.inria.fr/hal-01821240/file/bailly13a.pdf)
@@ -87,6 +121,14 @@ sudo -E env PATH=$PATH python3 -m keyboardexpanse
 
 ### Gesture Taxonomy
 
+Every gesture can be encoded in a string:
+- "U" - Finger is raised
+- "R" - Finger is resting
+- "C" _ Finger is clenched
+- "X" - Don't Care, can be in any position
+
+Thumbs are unique in that they cannot be "resting", they are always either extended "U" or clenched "C".
+
 ### Tap+Touch
 
 ![Tap+Touch](https://user-images.githubusercontent.com/10828202/166473601-75f7ab45-509a-4f2d-b159-266e519bb5ea.gif)
@@ -95,7 +137,7 @@ sudo -E env PATH=$PATH python3 -m keyboardexpanse
 
 ![Swipe](https://user-images.githubusercontent.com/10828202/166473663-ebf38960-2478-45e6-9267-bdcee09e65c8.gif)
 
-### Future
+### Future Plans
 
 - Chord = simultaneously pressed commands
 - Consume keystrokes until out of sequence

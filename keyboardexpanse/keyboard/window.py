@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from typing import Any, List, Tuple
 
 
 @dataclass
 class Window:
-    values = []
+    values: List[Tuple[float, Any]] = []
     recent_index = 0
     length_nanoseconds = 5e8  # 1s = 1e9ns
 

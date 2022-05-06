@@ -12,7 +12,7 @@ swipes:
     detection: "v+f"
     command: "super(up)"
 hands:
-  - name: ">.<"
+  - name: "Index Finger Touch"
     tap:
       left: "XOXXX"
       right: "XOXXX"
