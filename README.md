@@ -8,12 +8,6 @@
 
 Switching back between the keyboard and mouse not only breaks you from the flow but also wastes time. Keyboard shortcuts are great, but they are also a pain to learn and require awkward control sequences.
 
-<div align="center">
-
-![Screenshot_from_2022-05-03_10-34-45-removebg-preview](https://user-images.githubusercontent.com/10828202/166475758-57fd0b3e-24cc-4731-ae91-3103a3af9555.png)
-
-</div>
-
 Keyboard Expanse is all about keeping your hands on your keyboard; but expanding the interactable surface from simple button presses.
 
 1. **Grounded Location**: Minimises gestural fatigue
