@@ -84,7 +84,7 @@ def main():
     surfaceDetector = DetectSurfaces()
 
     # Create windows
-    cv2.namedWindow(KEYBOARD_WINDOW)
+    # cv2.namedWindow(KEYBOARD_WINDOW)
     cv2.namedWindow(ANNOTATED_WEBCAM_WINDOW, cv2.WINDOW_FREERATIO)
 
     # Setup Callbacks
@@ -105,6 +105,19 @@ def main():
 
             # mirror image for convenience
             img = cv2.flip(img, 2)
+
+
+            # BORDER_SIZE = 100
+            # img = cv2.copyMakeBorder(
+            #     img,
+            #     BORDER_SIZE,
+            #     BORDER_SIZE,
+            #     BORDER_SIZE,
+            #     BORDER_SIZE,
+            #     cv2.BORDER_CONSTANT,
+            #     value=0,
+            # )
+
 
             # resize image
             # scale_percent = 40  # percent of original size
@@ -141,16 +154,16 @@ def main():
                 img, str(int(fps)), (20, 50), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3
             )
 
-            charWidth = len(handAnalyser.lastGesture or "") * 10
-            cv2.putText(
-                img,
-                handAnalyser.lastGesture,
-                (wCam - charWidth, 50),
-                cv2.FONT_HERSHEY_PLAIN,
-                2,
-                (255, 0, 0),
-                2,
-            )
+            # charWidth = len(handAnalyser.lastGesture or "") * 10
+            # cv2.putText(
+            #     img,
+            #     handAnalyser.lastGesture,
+            #     (wCam - charWidth, 50),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     2,
+            #     (255, 0, 0),
+            #     2,
+            # )
 
             # keyboard_view = cv2.flip(surfaceDetector.isolate_surface(img), 0)
 
