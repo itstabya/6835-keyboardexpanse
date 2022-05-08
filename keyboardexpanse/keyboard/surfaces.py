@@ -167,7 +167,7 @@ class DetectSurfaces:
                 normApprox = contourOffset(
                     approx, (-BORDER_SIZE, -BORDER_SIZE)
                 ).squeeze()
-                # normApprox = condenseToNPoints(normApprox, N=4)
+                normApprox = condenseToNPoints(normApprox, N=4)
 
                 newContour = fourCornersSort(normApprox)
                 print(f"Adjusting Surface {self.surface_confirmations}", newContour)

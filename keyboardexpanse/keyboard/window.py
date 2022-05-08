@@ -1,10 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List, Tuple
 
 
 @dataclass
 class Window:
-    values: List[Tuple[float, Any]] = []
+    values: List[Tuple[float, Any]] = field(default_factory=list)
     recent_index = 0
     length_nanoseconds = 5e8  # 1s = 1e9ns
 
